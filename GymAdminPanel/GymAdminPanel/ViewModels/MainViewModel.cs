@@ -6,6 +6,7 @@ using GymAdminPanel.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GymAdminPanel.ViewModels;
 
@@ -55,5 +56,15 @@ public partial class MainViewModel : ObservableObject
         Clients = new ObservableCollection<Client>(offlineClients);
 
         Title = "Panel Administratora (TRYB OFFLINE)";
+    }
+    [RelayCommand]
+    private void Logout(Window currentWindow)
+    {
+        _apiService.Logout();
+
+        var loginWindow = new GymAdminPanel.Views.LoginWindow();
+        loginWindow.Show();
+
+        currentWindow?.Close(); 
     }
 }

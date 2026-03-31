@@ -45,4 +45,10 @@ public partial class LoginViewModel : ObservableObject
             ErrorMessage = "Błędny e-mail lub hasło!";
         }
     }
+    [RelayCommand]
+    private void OpenRegister()
+    {
+        var registerWindow = new GymAdminPanel.Views.RegisterWindow();
+        registerWindow.ShowDialog();
+    }
 }

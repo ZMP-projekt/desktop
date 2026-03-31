@@ -22,6 +22,26 @@ public class ApiService
         _httpClient = new HttpClient();
         _httpClient.BaseAddress = new Uri("https://api-j6d6.onrender.com/");
     }
+    public async Task<bool> RegisterAsync(string firstName, string lastName, string email, string password)
+    {
+        var requestData = new
+        {
+            firstName = firstName,
+            lastName = lastName,
+            email = email,
+            password = password
+        };
+
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/auth/register", requestData);
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     public async Task<bool> LoginAsync(string email, string password)
     {
@@ -67,5 +87,10 @@ public class ApiService
         {
             return new List<Client>();
         }
+    }
+    public void Logout()
+    {
+        Token = string.Empty;
+        _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 }
