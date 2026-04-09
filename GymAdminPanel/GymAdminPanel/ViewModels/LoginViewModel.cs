@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using GymAdminPanel.Services;
 using GymAdminPanel.Views;
+using GymAdminPanel.ViewModels;
 using System.Windows;
 using System.Threading.Tasks;
 
@@ -12,13 +13,13 @@ public partial class LoginViewModel : ObservableObject
     private readonly ApiService _apiService;
 
     [ObservableProperty]
-    private string _email = "";
+    private string _email = string.Empty;
 
     [ObservableProperty]
-    private string _password = "";
+    private string _password = string.Empty;
 
     [ObservableProperty]
-    private string _errorMessage = "";
+    private string _errorMessage = string.Empty;
 
     public LoginViewModel()
     {
@@ -28,16 +29,14 @@ public partial class LoginViewModel : ObservableObject
     [RelayCommand]
     private async Task LoginAsync(Window currentWindow)
     {
-        ErrorMessage = "Logowanie...";
-
+        ErrorMessage = string.Empty;
         bool success = await _apiService.LoginAsync(Email, Password);
 
         if (success)
         {
-            var mainViewModel = new MainViewModel(_apiService);
             var mainWindow = new MainWindow();
+            mainWindow.DataContext = new MainViewModel(_apiService);
             mainWindow.Show();
-
             currentWindow.Close();
         }
         else
@@ -45,6 +44,7 @@ public partial class LoginViewModel : ObservableObject
             ErrorMessage = "Błędny e-mail lub hasło!";
         }
     }
+
     [RelayCommand]
     private void OpenRegister()
     {

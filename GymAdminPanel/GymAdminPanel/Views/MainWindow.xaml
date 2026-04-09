@@ -1,7 +1,38 @@
 ﻿<Window x:Class="GymAdminPanel.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="{Binding Title}" Height="450" Width="800" WindowStartupLocation="CenterScreen">
+        Title="{Binding Title}" Height="600" Width="950"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F6F9">
+
+    <Window.Resources>
+        <Style x:Key="SidebarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#BDC3C7"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#3D5166"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -9,6 +40,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
+        <!-- Sidebar -->
         <Border Grid.Column="0" Background="#2C3E50">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
@@ -17,44 +49,54 @@
                 </Grid.RowDefinitions>
 
                 <StackPanel Grid.Row="0">
-                    <TextBlock Text="GYM ADMIN" Foreground="White" FontSize="20" 
-                               FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10,0,30"/>
+                    <TextBlock Text="GYM ADMIN" Foreground="White" FontSize="20"
+                               FontWeight="Bold" HorizontalAlignment="Center"
+                               Margin="0,10,0,30"/>
 
-                    <Button Content="👥 Klienci" Margin="0,0,0,5" Padding="5"/>
-                    <Button Content="📅 Grafik" Margin="0,0,0,5" Padding="5"/>
-                    <Button Content="💪 Trenerzy" Margin="0,0,0,5" Padding="5"/>
-                    <Button Content="⚙️ Ustawienia" Margin="0,0,0,5" Padding="5"/>
+                    <!-- Klienci – aktywny gdy ActiveSection == "users" -->
+                    <Button Content="👥  Klienci"
+                            Command="{Binding ShowUsersCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="users">
+                                        <Setter Property="Background" Value="#3D5166"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Content="📅  Grafik"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+
+                    <Button Content="💪  Trenerzy"
+                            Style="{StaticResource SidebarButtonStyle}"/>
+
+                    <Button Content="⚙️  Ustawienia"
+                            Style="{StaticResource SidebarButtonStyle}"/>
                 </StackPanel>
 
-                <Button Grid.Row="1" Content="🚪 Wyloguj" Command="{Binding LogoutCommand}" 
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
-                        Background="#C0392B" Foreground="White" FontWeight="Bold" Padding="10" Cursor="Hand"/>
+                <Button Grid.Row="1" Content="🚪  Wyloguj"
+                        Command="{Binding LogoutCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                        Background="#C0392B" Foreground="White" FontWeight="Bold"
+                        Padding="10" Cursor="Hand" BorderThickness="0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}"
+                                    CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
             </Grid>
         </Border>
 
-        <Grid Grid.Column="1" Margin="20">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <StackPanel Grid.Row="0">
-                <TextBlock Text="Zarządzanie Klientami" FontSize="28" FontWeight="Light" Margin="0,0,0,20"/>
-
-                <Button Content="Dodaj nowego klienta" Width="180" HorizontalAlignment="Left" Margin="0,0,0,10"/>
-            </StackPanel>
-
-            <DataGrid Grid.Row="1" ItemsSource="{Binding Clients}" 
-                  AutoGenerateColumns="False" IsReadOnly="True" 
-                  Background="White" BorderThickness="0">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="40"/>
-                    <DataGridTextColumn Header="Imię" Binding="{Binding FirstName}" Width="*"/>
-                    <DataGridTextColumn Header="Nazwisko" Binding="{Binding LastName}" Width="*"/>
-                    <DataGridTextColumn Header="E-mail" Binding="{Binding Email}" Width="1.5*"/>
-                    <DataGridTextColumn Header="Rola" Binding="{Binding Role}" Width="100"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Grid>
+        <ContentControl Grid.Column="1"
+                        Content="{Binding CurrentView}"/>
     </Grid>
 </Window>
