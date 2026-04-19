@@ -5,9 +5,7 @@
              xmlns:converters="clr-namespace:GymAdminPanel.Converters"
              StartupUri="Views/LoginWindow.xaml">
     <Application.Resources>
-        <converters:BoolToVisibilityConverter  x:Key="BoolToVisibilityConverter"/>
-        <converters:RoleToColorConverter       x:Key="RoleToColorConverter"/>
-        <converters:BoolToRedGreenConverter    x:Key="BoolToRedGreenConverter"/>
-        <converters:BoolToTypeColorConverter   x:Key="BoolToTypeColorConverter"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converters:RoleToColorConverter x:Key="RoleToColorConverter"/>
     </Application.Resources>
 </Application>
