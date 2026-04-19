@@ -19,6 +19,7 @@ public partial class MainViewModel : ObservableObject
     private string _title = "Panel Administratora Siłowni";
 
     private readonly UsersViewModel _usersViewModel;
+    private readonly ScheduleViewModel _scheduleViewModel;
 
     public MainViewModel(ApiService apiService)
     {
@@ -34,6 +35,15 @@ public partial class MainViewModel : ObservableObject
         ActiveSection = "users";
         var view = new GymAdminPanel.Views.UsersView();
         view.DataContext = _usersViewModel;
+        CurrentView = view;
+    }
+
+    [RelayCommand]
+    private void ShowSchedule()
+    {
+        ActiveSection = "schedule";
+        var view = new GymAdminPanel.Views.ScheduleView();
+        view.DataContext = _scheduleViewModel;
         CurrentView = view;
     }
     [RelayCommand]
