@@ -40,7 +40,6 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Sidebar -->
         <Border Grid.Column="0" Background="#2C3E50">
             <Grid Margin="10">
                 <Grid.RowDefinitions>
@@ -53,7 +52,6 @@
                                FontWeight="Bold" HorizontalAlignment="Center"
                                Margin="0,10,0,30"/>
 
-                    <!-- Klienci – aktywny gdy ActiveSection == "users" -->
                     <Button Content="👥  Klienci"
                             Command="{Binding ShowUsersCommand}">
                         <Button.Style>
@@ -69,8 +67,20 @@
                         </Button.Style>
                     </Button>
 
-                    <Button Content="📅  Grafik"
-                            Style="{StaticResource SidebarButtonStyle}"/>
+                    <Button Content="📅  Harmonogram"
+                            Command="{Binding ShowScheduleCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="schedule">
+                                        <Setter Property="Background" Value="#3D5166"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
 
                     <Button Content="💪  Trenerzy"
                             Style="{StaticResource SidebarButtonStyle}"/>
@@ -96,7 +106,6 @@
             </Grid>
         </Border>
 
-        <ContentControl Grid.Column="1"
-                        Content="{Binding CurrentView}"/>
+        <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
     </Grid>
 </Window>
