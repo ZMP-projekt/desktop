@@ -9,5 +9,6 @@
         <converters:RoleToColorConverter       x:Key="RoleToColorConverter"/>
         <converters:BoolToRedGreenConverter    x:Key="BoolToRedGreenConverter"/>
         <converters:BoolToTypeColorConverter   x:Key="BoolToTypeColorConverter"/>
+        <converters:ActionToColorConverter     x:Key="ActionToColorConverter"/>
     </Application.Resources>
 </Application>

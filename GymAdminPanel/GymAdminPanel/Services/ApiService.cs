@@ -351,4 +351,38 @@ public class ApiService
             return new List<Trainer>();
         }
     }
+    public async Task<List<AuditLog>> GetAuditLogsAsync()
+    {
+        if (string.IsNullOrEmpty(Token))
+        {
+            System.Windows.MessageBox.Show("Brak tokenu. Zaloguj się najpierw.", "Błąd autoryzacji");
+            return new List<AuditLog>();
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Token);
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/admin/audit-logs");
+            if (response.IsSuccessStatusCode)
+            {
+                var logs = await response.Content.ReadFromJsonAsync<List<AuditLog>>();
+                return logs ?? new List<AuditLog>();
+            }
+            else
+            {
+                string error = await response.Content.ReadAsStringAsync();
+                System.Windows.MessageBox.Show(
+                    $"Błąd pobierania logów!\nStatus: {response.StatusCode}\n{error}",
+                    "Błąd API");
+                return new List<AuditLog>();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
+            return new List<AuditLog>();
+        }
+    }
 }

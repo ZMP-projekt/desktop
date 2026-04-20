@@ -20,12 +20,14 @@ public partial class MainViewModel : ObservableObject
 
     private readonly UsersViewModel _usersViewModel;
     private readonly ScheduleViewModel _scheduleViewModel;
+    private readonly AuditLogsViewModel _auditLogsViewModel;
 
     public MainViewModel(ApiService apiService)
     {
         _apiService = apiService;
         _usersViewModel = new UsersViewModel(apiService);
         _scheduleViewModel = new ScheduleViewModel(apiService);
+        _auditLogsViewModel = new AuditLogsViewModel(apiService);
         ShowUsers();
     }
 
@@ -44,6 +46,15 @@ public partial class MainViewModel : ObservableObject
         ActiveSection = "schedule";
         var view = new GymAdminPanel.Views.ScheduleView();
         view.DataContext = _scheduleViewModel;
+        CurrentView = view;
+    }
+
+    [RelayCommand]
+    private void ShowAuditLogs()
+    {
+        ActiveSection = "auditlogs";
+        var view = new GymAdminPanel.Views.AuditLogsView();
+        view.DataContext = _auditLogsViewModel;
         CurrentView = view;
     }
 
