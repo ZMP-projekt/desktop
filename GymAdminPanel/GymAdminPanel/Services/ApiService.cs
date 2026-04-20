@@ -307,4 +307,48 @@ public class ApiService
             return new List<Participant>();
         }
     }
+    public async Task<List<Location>> GetLocationsAsync()
+    {
+        if (string.IsNullOrEmpty(Token)) return new List<Location>();
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Token);
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/locations");
+            if (response.IsSuccessStatusCode)
+            {
+                var locations = await response.Content.ReadFromJsonAsync<List<Location>>();
+                return locations ?? new List<Location>();
+            }
+            return new List<Location>();
+        }
+        catch
+        {
+            return new List<Location>();
+        }
+    }
+    public async Task<List<Trainer>> GetTrainersAsync()
+    {
+        if (string.IsNullOrEmpty(Token)) return new List<Trainer>();
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Token);
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/trainers");
+            if (response.IsSuccessStatusCode)
+            {
+                var trainers = await response.Content.ReadFromJsonAsync<List<Trainer>>();
+                return trainers ?? new List<Trainer>();
+            }
+            return new List<Trainer>();
+        }
+        catch
+        {
+            return new List<Trainer>();
+        }
+    }
 }

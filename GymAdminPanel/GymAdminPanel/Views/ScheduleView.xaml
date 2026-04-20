@@ -29,67 +29,44 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Content="◀"
-                    Command="{Binding PreviousDayCommand}"
-                    Width="36" Height="36"
-                    Background="#2C3E50" Foreground="White"
+            <Button Grid.Column="0" Content="◀" Command="{Binding PreviousDayCommand}"
+                    Width="36" Height="36" Background="#2C3E50" Foreground="White"
                     BorderThickness="0" Cursor="Hand" FontSize="14"/>
-
-            <DatePicker Grid.Column="1"
-                        SelectedDate="{Binding SelectedDate}"
-                        Margin="8,0" Height="36"
-                        FontSize="14" Width="160"/>
-
-            <Button Grid.Column="2" Content="▶"
-                    Command="{Binding NextDayCommand}"
-                    Width="36" Height="36"
-                    Background="#2C3E50" Foreground="White"
+            <DatePicker Grid.Column="1" SelectedDate="{Binding SelectedDate}"
+                        Margin="8,0" Height="36" Width="160" FontSize="14"/>
+            <Button Grid.Column="2" Content="▶" Command="{Binding NextDayCommand}"
+                    Width="36" Height="36" Background="#2C3E50" Foreground="White"
                     BorderThickness="0" Cursor="Hand" FontSize="14"/>
-
-            <Button Grid.Column="3" Content="Dziś"
-                    Command="{Binding GoToTodayCommand}"
+            <Button Grid.Column="3" Content="Dziś" Command="{Binding GoToTodayCommand}"
                     Margin="8,0,0,0" Padding="12,0" Height="36"
                     Background="#7F8C8D" Foreground="White"
                     BorderThickness="0" Cursor="Hand" FontSize="13"/>
-
             <Button Grid.Column="5" Content="＋ Dodaj zajęcia"
                     Command="{Binding ToggleAddFormCommand}"
                     Padding="14,0" Height="36"
                     Background="#27AE60" Foreground="White"
-                    FontWeight="SemiBold" BorderThickness="0"
-                    Cursor="Hand" FontSize="13"/>
+                    FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" FontSize="13"/>
         </Grid>
 
         <Border Grid.Row="2"
                 Visibility="{Binding IsAddFormVisible, Converter={StaticResource BoolToVisibilityConverter}}"
                 Background="White" BorderBrush="#DDE1E7" BorderThickness="1"
                 CornerRadius="4" Margin="0,0,0,12" Padding="16">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <TextBlock Grid.Row="0" Text="Nowe zajęcia"
-                           FontSize="16" FontWeight="SemiBold"
+            <StackPanel>
+                <TextBlock Text="Nowe zajęcia" FontSize="16" FontWeight="SemiBold"
                            Foreground="#2C3E50" Margin="0,0,0,12"/>
 
-                <Grid Grid.Row="1" Margin="0,0,0,8">
+                <Grid Margin="0,0,0,8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="*" MinWidth="120"/>
-                        <ColumnDefinition Width="*" MinWidth="120"/>
-                        <ColumnDefinition Width="*" MinWidth="120"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="130"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBox Grid.Column="0"
+                    <TextBox Grid.Column="0" Margin="0,0,8,0"
                              Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="8,6" Margin="0,0,8,0"
-                             FontSize="13" BorderBrush="#DDE1E7"
-                             Tag="Nazwa zajęć *">
+                             Padding="8,7" FontSize="13" BorderBrush="#DDE1E7">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
                                 <Style.Triggers>
@@ -109,10 +86,9 @@
                         </TextBox.Style>
                     </TextBox>
 
-                    <TextBox Grid.Column="1"
+                    <TextBox Grid.Column="1" Margin="0,0,8,0"
                              Text="{Binding NewStartTime, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="8,6" Margin="0,0,8,0" FontSize="13"
-                             BorderBrush="#DDE1E7">
+                             Padding="8,7" FontSize="13" BorderBrush="#DDE1E7">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
                                 <Style.Triggers>
@@ -132,10 +108,9 @@
                         </TextBox.Style>
                     </TextBox>
 
-                    <TextBox Grid.Column="2"
+                    <TextBox Grid.Column="2" Margin="0,0,8,0"
                              Text="{Binding NewEndTime, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="8,6" Margin="0,0,8,0" FontSize="13"
-                             BorderBrush="#DDE1E7">
+                             Padding="8,7" FontSize="13" BorderBrush="#DDE1E7">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
                                 <Style.Triggers>
@@ -155,32 +130,68 @@
                         </TextBox.Style>
                     </TextBox>
 
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="0,0,8,0"
-                                VerticalAlignment="Center">
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock Text="Max osób:" FontSize="13" Foreground="#5D6D7E"
                                    VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <TextBox Text="{Binding NewMaxParticipants, UpdateSourceTrigger=PropertyChanged}"
-                                 Width="50" Padding="6,6" FontSize="13" BorderBrush="#DDE1E7"/>
+                                 Width="55" Padding="8,7" FontSize="13" BorderBrush="#DDE1E7"/>
                     </StackPanel>
-
-                    <CheckBox Grid.Column="4"
-                              IsChecked="{Binding NewPersonalTraining}"
-                              Content="Trening osobisty"
-                              VerticalAlignment="Center"
-                              Margin="0,0,12,0" FontSize="13"/>
                 </Grid>
 
-                <Grid Grid.Row="2">
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="Lokalizacja *" FontSize="11"
+                                   Foreground="#7F8C8D" Margin="0,0,0,3"/>
+                        <ComboBox ItemsSource="{Binding Locations}"
+                                  SelectedItem="{Binding SelectedLocation}"
+                                  DisplayMemberPath="DisplayName"
+                                  Padding="8,6" FontSize="13" BorderBrush="#DDE1E7"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                        <TextBlock FontSize="11" Margin="0,0,0,3">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Trener *"/>
+                                    <Setter Property="Foreground" Value="#7F8C8D"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasTrainers}" Value="False">
+                                            <Setter Property="Text" Value="Trener (oczekuje na aktualizację API)"/>
+                                            <Setter Property="Foreground" Value="#E67E22"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <ComboBox ItemsSource="{Binding Trainers}"
+                                  SelectedItem="{Binding SelectedTrainer}"
+                                  DisplayMemberPath="DisplayName"
+                                  IsEnabled="{Binding HasTrainers}"
+                                  Padding="8,6" FontSize="13" BorderBrush="#DDE1E7"/>
+                    </StackPanel>
+
+                    <CheckBox Grid.Column="2"
+                              IsChecked="{Binding NewPersonalTraining}"
+                              Content="Trening osobisty"
+                              VerticalAlignment="Bottom" Margin="0,0,0,5" FontSize="13"/>
+                </Grid>
+
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBox Grid.Column="0"
+                    <TextBox Grid.Column="0" Margin="0,0,8,0"
                              Text="{Binding NewDescription, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="8,6" Margin="0,0,8,0" FontSize="13"
-                             BorderBrush="#DDE1E7">
+                             Padding="8,7" FontSize="13" BorderBrush="#DDE1E7">
                         <TextBox.Style>
                             <Style TargetType="TextBox">
                                 <Style.Triggers>
@@ -200,21 +211,17 @@
                         </TextBox.Style>
                     </TextBox>
 
-                    <Button Grid.Column="1"
-                            Content="✓ Zapisz"
+                    <Button Grid.Column="1" Content="✓ Zapisz"
                             Command="{Binding SaveNewClassCommand}"
-                            Padding="16,6" Margin="0,0,8,0"
+                            Padding="16,7" Margin="0,0,8,0"
                             Background="#27AE60" Foreground="White"
                             BorderThickness="0" Cursor="Hand" FontSize="13"/>
-
-                    <Button Grid.Column="2"
-                            Content="✕ Anuluj"
+                    <Button Grid.Column="2" Content="✕ Anuluj"
                             Command="{Binding ToggleAddFormCommand}"
-                            Padding="16,6"
-                            Background="#95A5A6" Foreground="White"
+                            Padding="16,7" Background="#95A5A6" Foreground="White"
                             BorderThickness="0" Cursor="Hand" FontSize="13"/>
                 </Grid>
-            </Grid>
+            </StackPanel>
         </Border>
 
         <Border Grid.Row="3" Background="White"
@@ -222,31 +229,17 @@
             <Grid>
                 <Grid Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
                       Background="#88FFFFFF" Panel.ZIndex="10">
-                    <TextBlock Text="⏳ Ładowanie..."
-                               FontSize="16" Foreground="#2C3E50"
+                    <TextBlock Text="⏳ Ładowanie..." FontSize="16" Foreground="#2C3E50"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
 
-                <StackPanel Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibilityConverter}}"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="📅" FontSize="48" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Brak zajęć w tym dniu"
-                               FontSize="16" Foreground="#95A5A6"
-                               HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                </StackPanel>
-
                 <DataGrid ItemsSource="{Binding Classes}"
                           SelectedItem="{Binding SelectedClass}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          BorderThickness="0"
-                          GridLinesVisibility="Horizontal"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          BorderThickness="0" GridLinesVisibility="Horizontal"
                           HorizontalGridLinesBrush="#F0F0F0"
-                          RowBackground="White"
-                          AlternatingRowBackground="#FAFBFC"
-                          SelectionMode="Single"
-                          FontSize="13"
-                          CanUserSortColumns="True">
+                          RowBackground="White" AlternatingRowBackground="#FAFBFC"
+                          SelectionMode="Single" CanUserSortColumns="True" FontSize="13">
 
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
@@ -289,18 +282,9 @@
                     </DataGrid.CellStyle>
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Godzina"
-                                            Binding="{Binding TimeRange}"
-                                            Width="120"/>
-
-                        <DataGridTextColumn Header="Nazwa zajęć"
-                                            Binding="{Binding Name}"
-                                            Width="*"/>
-
-                        <DataGridTextColumn Header="Trener"
-                                            Binding="{Binding TrainerName}"
-                                            Width="160"/>
-
+                        <DataGridTextColumn Header="Godzina" Binding="{Binding TimeRange}" Width="120"/>
+                        <DataGridTextColumn Header="Nazwa zajęć" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Trener" Binding="{Binding TrainerName}" Width="160"/>
                         <DataGridTemplateColumn Header="Uczestnicy" Width="110">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -312,8 +296,7 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-
-                        <DataGridTemplateColumn Header="Typ" Width="130">
+                        <DataGridTemplateColumn Header="Typ" Width="140">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="3" Padding="6,3" HorizontalAlignment="Left"
@@ -324,12 +307,8 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-
-                        <DataGridTextColumn Header="Lokalizacja"
-                                            Binding="{Binding LocationName}"
-                                            Width="140"/>
-
-                        <DataGridTemplateColumn Header="Akcje" Width="180">
+                        <DataGridTextColumn Header="Lokalizacja" Binding="{Binding LocationName}" Width="140"/>
+                        <DataGridTemplateColumn Header="Akcje" Width="190">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -345,7 +324,7 @@
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
                                                 Background="#E74C3C" Foreground="White"
-                                                BorderThickness="0" Padding="7,4"
+                                                BorderThickness="0" Padding="8,4"
                                                 FontSize="11" Cursor="Hand"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -356,8 +335,7 @@
             </Grid>
         </Border>
 
-        <TextBlock Grid.Row="4"
-                   Text="{Binding FooterText}"
+        <TextBlock Grid.Row="4" Text="{Binding FooterText}"
                    FontSize="12" Foreground="#95A5A6" Margin="0,8,0,0"/>
     </Grid>
 </UserControl>

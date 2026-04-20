@@ -32,7 +32,6 @@ public partial class ScheduleViewModel : ObservableObject
     [ObservableProperty]
     private string _footerText = "";
 
-    // Pola formularza "Dodaj zajęcia"
     [ObservableProperty]
     private bool _isAddFormVisible;
 
@@ -55,15 +54,29 @@ public partial class ScheduleViewModel : ObservableObject
     private int _newMaxParticipants = 15;
 
     [ObservableProperty]
-    private int _newLocationId = 1;
+    private bool _newPersonalTraining;
 
     [ObservableProperty]
-    private bool _newPersonalTraining;
+    private ObservableCollection<Location> _locations = new();
+
+    [ObservableProperty]
+    private Location? _selectedLocation;
+
+    [ObservableProperty]
+    private ObservableCollection<Trainer> _trainers = new();
+
+    [ObservableProperty]
+    private Trainer? _selectedTrainer;
+
+    [ObservableProperty]
+    private bool _hasTrainers;
 
     public ScheduleViewModel(ApiService apiService)
     {
         _apiService = apiService;
         _ = LoadClassesAsync();
+        _ = LoadLocationsAsync();
+        _ = LoadTrainersAsync();
     }
 
     partial void OnSelectedDateChanged(DateTime value)
@@ -84,29 +97,37 @@ public partial class ScheduleViewModel : ObservableObject
             ? $"Zajęcia na {SelectedDate:dd MMMM yyyy}"
             : $"Brak zajęć na {SelectedDate:dd MMMM yyyy}";
 
-        FooterText = $"Łącznie: {Classes.Count} zajęć · " +
+        FooterText = $"Łącznie: {Classes.Count} zajęć  ·  " +
                      $"Zapisanych uczestników: {Classes.Sum(c => c.CurrentParticipants)}";
 
         IsLoading = false;
     }
 
-    [RelayCommand]
-    private void PreviousDay()
+    private async Task LoadLocationsAsync()
     {
-        SelectedDate = SelectedDate.AddDays(-1);
+        var locs = await _apiService.GetLocationsAsync();
+        Locations = new ObservableCollection<Location>(locs);
+        if (Locations.Count > 0)
+            SelectedLocation = Locations[0];
+    }
+
+    private async Task LoadTrainersAsync()
+    {
+        var trainers = await _apiService.GetTrainersAsync();
+        Trainers = new ObservableCollection<Trainer>(trainers);
+        HasTrainers = Trainers.Count > 0;
+        if (HasTrainers)
+            SelectedTrainer = Trainers[0];
     }
 
     [RelayCommand]
-    private void NextDay()
-    {
-        SelectedDate = SelectedDate.AddDays(1);
-    }
+    private void PreviousDay() => SelectedDate = SelectedDate.AddDays(-1);
 
     [RelayCommand]
-    private void GoToToday()
-    {
-        SelectedDate = DateTime.Today;
-    }
+    private void NextDay() => SelectedDate = SelectedDate.AddDays(1);
+
+    [RelayCommand]
+    private void GoToToday() => SelectedDate = DateTime.Today;
 
     [RelayCommand]
     private void ToggleAddForm()
@@ -114,7 +135,6 @@ public partial class ScheduleViewModel : ObservableObject
         IsAddFormVisible = !IsAddFormVisible;
         if (IsAddFormVisible)
         {
-            // Resetuj formularz
             NewName = "";
             NewDescription = "";
             NewStartDate = SelectedDate;
@@ -122,6 +142,8 @@ public partial class ScheduleViewModel : ObservableObject
             NewEndTime = "10:00";
             NewMaxParticipants = 15;
             NewPersonalTraining = false;
+            if (Locations.Count > 0) SelectedLocation = Locations[0];
+            if (Trainers.Count > 0) SelectedTrainer = Trainers[0];
         }
     }
 
@@ -133,11 +155,20 @@ public partial class ScheduleViewModel : ObservableObject
             MessageBox.Show("Podaj nazwę zajęć.", "Walidacja");
             return;
         }
-
+        if (SelectedLocation == null)
+        {
+            MessageBox.Show("Wybierz lokalizację.", "Walidacja");
+            return;
+        }
         if (!TimeSpan.TryParse(NewStartTime, out var startTs) ||
             !TimeSpan.TryParse(NewEndTime, out var endTs))
         {
             MessageBox.Show("Podaj godziny w formacie HH:mm (np. 09:00).", "Walidacja");
+            return;
+        }
+        if (endTs <= startTs)
+        {
+            MessageBox.Show("Godzina zakończenia musi być późniejsza niż rozpoczęcia.", "Walidacja");
             return;
         }
 
@@ -148,20 +179,18 @@ public partial class ScheduleViewModel : ObservableObject
             StartTime = NewStartDate.Date + startTs,
             EndTime = NewStartDate.Date + endTs,
             MaxParticipants = NewMaxParticipants,
-            LocationId = NewLocationId,
-            PersonalTraining = NewPersonalTraining
+            LocationId = SelectedLocation.Id,
+            PersonalTraining = NewPersonalTraining,
         };
 
         IsLoading = true;
         var success = await _apiService.CreateClassAsync(request);
-
         if (success)
         {
             IsAddFormVisible = false;
             StatusText = $"Zajęcia \"{NewName}\" zostały dodane.";
             await LoadClassesAsync();
         }
-
         IsLoading = false;
     }
 
@@ -170,7 +199,7 @@ public partial class ScheduleViewModel : ObservableObject
     {
         if (gymClass == null) return;
 
-        var result = MessageBox.Show(
+        var confirm = MessageBox.Show(
             $"Czy na pewno chcesz usunąć zajęcia?\n\n" +
             $"Nazwa: {gymClass.Name}\n" +
             $"Trener: {gymClass.TrainerName}\n" +
@@ -179,7 +208,7 @@ public partial class ScheduleViewModel : ObservableObject
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
-        if (result != MessageBoxResult.Yes) return;
+        if (confirm != MessageBoxResult.Yes) return;
 
         IsLoading = true;
         var success = await _apiService.DeleteClassAsync(gymClass.Id);
@@ -194,7 +223,6 @@ public partial class ScheduleViewModel : ObservableObject
         {
             StatusText = "Nie udało się usunąć zajęć.";
         }
-
         IsLoading = false;
     }
 
