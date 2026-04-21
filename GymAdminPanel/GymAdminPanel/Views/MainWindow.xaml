@@ -82,6 +82,21 @@
                         <TextBlock Text="📅  Harmonogram" FontSize="13"/>
                     </Button>
 
+                    <Button Command="{Binding ShowTrainersCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="trainers">
+                                        <Setter Property="Background" Value="#3D5166"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <TextBlock Text="💪  Trenerzy" FontSize="13"/>
+                    </Button>
+
                     <Button Command="{Binding ShowAuditLogsCommand}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
@@ -119,10 +134,6 @@
                                            Foreground="White" FontSize="10" FontWeight="Bold"/>
                             </Border>
                         </StackPanel>
-                    </Button>
-
-                    <Button Style="{StaticResource SidebarButtonStyle}">
-                        <TextBlock Text="💪  Trenerzy" FontSize="13"/>
                     </Button>
 
                     <Button Style="{StaticResource SidebarButtonStyle}">

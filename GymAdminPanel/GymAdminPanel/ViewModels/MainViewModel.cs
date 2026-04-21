@@ -25,6 +25,7 @@ public partial class MainViewModel : ObservableObject
     private readonly ScheduleViewModel _scheduleViewModel;
     private readonly AuditLogsViewModel _auditLogsViewModel;
     private readonly NotificationsViewModel _notificationsViewModel;
+    private readonly TrainersViewModel _trainersViewModel;
 
     public MainViewModel(ApiService apiService)
     {
@@ -33,6 +34,7 @@ public partial class MainViewModel : ObservableObject
         _scheduleViewModel = new ScheduleViewModel(apiService);
         _auditLogsViewModel = new AuditLogsViewModel(apiService);
         _notificationsViewModel = new NotificationsViewModel(apiService);
+        _trainersViewModel = new TrainersViewModel(apiService);
 
         _notificationsViewModel.PropertyChanged += (s, e) =>
         {
@@ -58,6 +60,15 @@ public partial class MainViewModel : ObservableObject
         ActiveSection = "schedule";
         var view = new GymAdminPanel.Views.ScheduleView();
         view.DataContext = _scheduleViewModel;
+        CurrentView = view;
+    }
+
+    [RelayCommand]
+    private void ShowTrainers()
+    {
+        ActiveSection = "trainers";
+        var view = new GymAdminPanel.Views.TrainersView();
+        view.DataContext = _trainersViewModel;
         CurrentView = view;
     }
 

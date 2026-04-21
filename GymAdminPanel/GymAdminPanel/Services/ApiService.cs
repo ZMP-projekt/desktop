@@ -430,4 +430,32 @@ public class ApiService
         }
         catch { return false; }
     }
+    public async Task<bool> UpdateTrainerAsync(int trainerId, UpdateTrainerRequest request)
+    {
+        if (string.IsNullOrEmpty(Token)) return false;
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Token);
+
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync(
+                $"api/admin/trainers/{trainerId}", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string error = await response.Content.ReadAsStringAsync();
+                System.Windows.MessageBox.Show(
+                    $"Błąd aktualizacji trenera!\nStatus: {response.StatusCode}\n{error}",
+                    "Błąd API");
+            }
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
+            return false;
+        }
+    }
 }
