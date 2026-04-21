@@ -65,7 +65,6 @@ public class ApiService
             return false;
         }
     }
-
     public async Task<bool> LoginAsync(string email, string password)
     {
         var requestData = new { email = email, password = password };
@@ -161,7 +160,6 @@ public class ApiService
             return new List<User>();
         }
     }
-
     public async Task<bool> DeleteUserAsync(int userId)
     {
         if (string.IsNullOrEmpty(Token)) return false;
@@ -180,7 +178,6 @@ public class ApiService
             return false;
         }
     }
-
     public async Task<bool> ChangeUserRoleAsync(int userId, string newRole)
     {
         if (string.IsNullOrEmpty(Token)) return false;
@@ -202,7 +199,6 @@ public class ApiService
             return false;
         }
     }
-
     public async Task<List<GymClass>> GetClassesByDateAsync(DateTime date)
     {
         if (string.IsNullOrEmpty(Token))
@@ -239,7 +235,6 @@ public class ApiService
             return new List<GymClass>();
         }
     }
-
     public async Task<bool> CreateClassAsync(CreateClassRequest request)
     {
         if (string.IsNullOrEmpty(Token)) return false;
@@ -265,7 +260,6 @@ public class ApiService
             return false;
         }
     }
-
     public async Task<bool> DeleteClassAsync(int classId)
     {
         if (string.IsNullOrEmpty(Token)) return false;
@@ -284,7 +278,6 @@ public class ApiService
             return false;
         }
     }
-
     public async Task<List<Participant>> GetClassParticipantsAsync(int classId)
     {
         if (string.IsNullOrEmpty(Token)) return new List<Participant>();
@@ -384,5 +377,57 @@ public class ApiService
             System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
             return new List<AuditLog>();
         }
+    }
+    public async Task<List<Notification>> GetNotificationsAsync()
+    {
+        if (string.IsNullOrEmpty(Token)) return new List<Notification>();
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Token);
+
+        try
+        {
+            var response = await _httpClient.GetAsync("api/notifications");
+            if (response.IsSuccessStatusCode)
+            {
+                var notifications = await response.Content.ReadFromJsonAsync<List<Notification>>();
+                return notifications ?? new List<Notification>();
+            }
+            return new List<Notification>();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Błąd pobierania powiadomień: {ex.Message}", "Błąd");
+            return new List<Notification>();
+        }
+    }
+    public async Task<bool> MarkNotificationReadAsync(int id)
+    {
+        if (string.IsNullOrEmpty(Token)) return false;
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Token);
+
+        try
+        {
+            var response = await _httpClient.PatchAsync(
+                $"api/notifications/{id}/read", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+    public async Task<bool> DeleteNotificationAsync(int id)
+    {
+        if (string.IsNullOrEmpty(Token)) return false;
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", Token);
+
+        try
+        {
+            var response = await _httpClient.DeleteAsync($"api/notifications/{id}");
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
     }
 }

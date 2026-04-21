@@ -1,7 +1,7 @@
 ﻿<Window x:Class="GymAdminPanel.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="{Binding Title}" Height="620" Width="980"
+        Title="{Binding Title}" Height="640" Width="980"
         WindowStartupLocation="CenterScreen"
         Background="#F4F6F9">
 
@@ -52,7 +52,7 @@
                                FontWeight="Bold" HorizontalAlignment="Center"
                                Margin="0,10,0,30"/>
 
-                    <Button Content="👥  Klienci" Command="{Binding ShowUsersCommand}">
+                    <Button Command="{Binding ShowUsersCommand}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
                                 <Style.Triggers>
@@ -64,9 +64,10 @@
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
+                        <TextBlock Text="👥  Klienci" FontSize="13"/>
                     </Button>
 
-                    <Button Content="📅  Harmonogram" Command="{Binding ShowScheduleCommand}">
+                    <Button Command="{Binding ShowScheduleCommand}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
                                 <Style.Triggers>
@@ -78,9 +79,10 @@
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
+                        <TextBlock Text="📅  Harmonogram" FontSize="13"/>
                     </Button>
 
-                    <Button Content="📋  Logi audytowe" Command="{Binding ShowAuditLogsCommand}">
+                    <Button Command="{Binding ShowAuditLogsCommand}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
                                 <Style.Triggers>
@@ -92,13 +94,40 @@
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
+                        <TextBlock Text="📋  Logi audytowe" FontSize="13"/>
                     </Button>
 
-                    <Button Content="💪  Trenerzy"
-                            Style="{StaticResource SidebarButtonStyle}"/>
+                    <Button Command="{Binding ShowNotificationsCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveSection}" Value="notifications">
+                                        <Setter Property="Background" Value="#3D5166"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔔  Powiadomienia" FontSize="13" VerticalAlignment="Center"/>
+                            <Border Margin="6,0,0,0" Padding="5,1" CornerRadius="8"
+                                    Background="#E74C3C" VerticalAlignment="Center"
+                                    Visibility="{Binding UnreadNotificationsCount,
+                                        Converter={StaticResource IntToVisibilityConverter}}">
+                                <TextBlock Text="{Binding UnreadNotificationsCount}"
+                                           Foreground="White" FontSize="10" FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
+                    </Button>
 
-                    <Button Content="⚙️  Ustawienia"
-                            Style="{StaticResource SidebarButtonStyle}"/>
+                    <Button Style="{StaticResource SidebarButtonStyle}">
+                        <TextBlock Text="💪  Trenerzy" FontSize="13"/>
+                    </Button>
+
+                    <Button Style="{StaticResource SidebarButtonStyle}">
+                        <TextBlock Text="⚙️  Ustawienia" FontSize="13"/>
+                    </Button>
                 </StackPanel>
 
                 <Button Grid.Row="1" Content="🚪  Wyloguj"

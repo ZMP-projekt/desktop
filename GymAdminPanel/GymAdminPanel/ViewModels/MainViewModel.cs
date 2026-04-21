@@ -18,9 +18,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _title = "Panel Administratora Siłowni";
 
+    [ObservableProperty]
+    private int _unreadNotificationsCount;
+
     private readonly UsersViewModel _usersViewModel;
     private readonly ScheduleViewModel _scheduleViewModel;
     private readonly AuditLogsViewModel _auditLogsViewModel;
+    private readonly NotificationsViewModel _notificationsViewModel;
 
     public MainViewModel(ApiService apiService)
     {
@@ -28,6 +32,14 @@ public partial class MainViewModel : ObservableObject
         _usersViewModel = new UsersViewModel(apiService);
         _scheduleViewModel = new ScheduleViewModel(apiService);
         _auditLogsViewModel = new AuditLogsViewModel(apiService);
+        _notificationsViewModel = new NotificationsViewModel(apiService);
+
+        _notificationsViewModel.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(NotificationsViewModel.UnreadCount))
+                UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
+        };
+
         ShowUsers();
     }
 
@@ -55,6 +67,15 @@ public partial class MainViewModel : ObservableObject
         ActiveSection = "auditlogs";
         var view = new GymAdminPanel.Views.AuditLogsView();
         view.DataContext = _auditLogsViewModel;
+        CurrentView = view;
+    }
+
+    [RelayCommand]
+    private void ShowNotifications()
+    {
+        ActiveSection = "notifications";
+        var view = new GymAdminPanel.Views.NotificationsView();
+        view.DataContext = _notificationsViewModel;
         CurrentView = view;
     }
 

@@ -10,5 +10,6 @@
         <converters:BoolToRedGreenConverter    x:Key="BoolToRedGreenConverter"/>
         <converters:BoolToTypeColorConverter   x:Key="BoolToTypeColorConverter"/>
         <converters:ActionToColorConverter     x:Key="ActionToColorConverter"/>
+        <converters:IntToVisibilityConverter   x:Key="IntToVisibilityConverter"/>
     </Application.Resources>
 </Application>
