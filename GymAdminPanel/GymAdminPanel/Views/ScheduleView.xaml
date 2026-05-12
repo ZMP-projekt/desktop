@@ -3,8 +3,30 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="#F4F6F9">
 
+    <UserControl.Resources>
+        <Style x:Key="ScheduleComboStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="9,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#DDE1E7"/>
+        </Style>
+
+        <Style x:Key="TableActionButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="MinWidth" Value="34"/>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Margin="24">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -48,7 +70,110 @@
                     FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" FontSize="13"/>
         </Grid>
 
-        <Border Grid.Row="2"
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding WeekDays}" Margin="0,0,0,12">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" Columns="7"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Command="{Binding DataContext.SelectDateCommand,
+                                RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding Date}"
+                            Margin="0,0,8,0"
+                            Padding="8,5"
+                            Height="46"
+                            BorderThickness="1"
+                            BorderBrush="#DDE1E7"
+                            Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="Foreground" Value="#2C3E50"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="Background" Value="#2980B9"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                        <Setter Property="BorderBrush" Value="#2980B9"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#EBF5FB"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Header}" TextAlignment="Center" FontSize="12"/>
+                            <TextBlock Text="{Binding Subheader}" TextAlignment="Center" FontSize="13"
+                                       FontWeight="SemiBold" Margin="0,1,0,0"/>
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Grid.Row="3" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="150"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox Grid.Column="0"
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     Height="34"
+                     Padding="10,7" FontSize="13" Margin="0,0,8,0"
+                     Background="White" BorderBrush="#DDE1E7" BorderThickness="1"
+                     VerticalContentAlignment="Center">
+                <TextBox.Style>
+                    <Style TargetType="TextBox">
+                        <Style.Triggers>
+                            <Trigger Property="Text" Value="">
+                                <Setter Property="Background">
+                                    <Setter.Value>
+                                        <VisualBrush AlignmentX="Left" AlignmentY="Center" Stretch="None">
+                                            <VisualBrush.Visual>
+                                                <TextBlock Text="Szukaj po nazwie, trenerze lub lokalizacji..."
+                                                           Foreground="#AAB0B8" FontSize="13" Margin="10,0,0,0"/>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
+
+            <ComboBox Grid.Column="1"
+                      ItemsSource="{Binding TrainerFilters}"
+                      SelectedItem="{Binding SelectedTrainerFilter}"
+                      Margin="0,0,8,0"
+                      Style="{StaticResource ScheduleComboStyle}"/>
+
+            <ComboBox Grid.Column="2"
+                      ItemsSource="{Binding LocationFilters}"
+                      SelectedItem="{Binding SelectedLocationFilter}"
+                      Margin="0,0,8,0"
+                      Style="{StaticResource ScheduleComboStyle}"/>
+
+            <ComboBox Grid.Column="3"
+                      ItemsSource="{Binding TypeFilters}"
+                      SelectedItem="{Binding SelectedTypeFilter}"
+                      Margin="0,0,8,0"
+                      Style="{StaticResource ScheduleComboStyle}"/>
+
+            <ComboBox Grid.Column="4"
+                      ItemsSource="{Binding AvailabilityFilters}"
+                      SelectedItem="{Binding SelectedAvailabilityFilter}"
+                      Style="{StaticResource ScheduleComboStyle}"/>
+        </Grid>
+
+        <Border Grid.Row="4"
                 Visibility="{Binding IsAddFormVisible, Converter={StaticResource BoolToVisibilityConverter}}"
                 Background="White" BorderBrush="#DDE1E7" BorderThickness="1"
                 CornerRadius="4" Margin="0,0,0,12" Padding="16">
@@ -224,7 +349,7 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="3" Background="White"
+        <Border Grid.Row="5" Background="White"
                 BorderBrush="#DDE1E7" BorderThickness="1" CornerRadius="4">
             <Grid>
                 <Grid Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
@@ -233,7 +358,30 @@
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
 
-                <DataGrid ItemsSource="{Binding Classes}"
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                            Panel.ZIndex="1">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding FilteredClasses.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="Brak zajęć dla wybranych filtrów"
+                               FontSize="16" Foreground="#2C3E50"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Zmień datę lub filtry, aby zobaczyć inne zajęcia."
+                               FontSize="12" Foreground="#95A5A6"
+                               HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <DataGrid ItemsSource="{Binding FilteredClasses}"
                           SelectedItem="{Binding SelectedClass}"
                           AutoGenerateColumns="False" IsReadOnly="True"
                           BorderThickness="0" GridLinesVisibility="Horizontal"
@@ -283,8 +431,8 @@
 
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Godzina" Binding="{Binding TimeRange}" Width="120"/>
-                        <DataGridTextColumn Header="Nazwa zajęć" Binding="{Binding Name}" Width="*"/>
-                        <DataGridTextColumn Header="Trener" Binding="{Binding TrainerName}" Width="160"/>
+                        <DataGridTextColumn Header="Nazwa zajęć" Binding="{Binding Name}" Width="1.4*"/>
+                        <DataGridTextColumn Header="Trener" Binding="{Binding TrainerName}" Width="180"/>
                         <DataGridTemplateColumn Header="Uczestnicy" Width="110">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -307,8 +455,8 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        <DataGridTextColumn Header="Lokalizacja" Binding="{Binding LocationName}" Width="140"/>
-                        <DataGridTemplateColumn Header="Akcje" Width="190">
+                        <DataGridTextColumn Header="Lokalizacja" Binding="{Binding LocationName}" Width="190"/>
+                        <DataGridTemplateColumn Header="Akcje" Width="170">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -316,16 +464,15 @@
                                                 Command="{Binding DataContext.ShowParticipantsCommand,
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Background="#2980B9" Foreground="White"
-                                                BorderThickness="0" Padding="7,4"
-                                                FontSize="11" Cursor="Hand" Margin="0,0,6,0"/>
+                                                Background="#2980B9"
+                                                Style="{StaticResource TableActionButtonStyle}"
+                                                Margin="0,0,6,0"/>
                                         <Button Content="🗑"
                                                 Command="{Binding DataContext.DeleteClassCommand,
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
-                                                Background="#E74C3C" Foreground="White"
-                                                BorderThickness="0" Padding="8,4"
-                                                FontSize="11" Cursor="Hand"/>
+                                                Background="#E74C3C"
+                                                Style="{StaticResource TableActionButtonStyle}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -335,7 +482,7 @@
             </Grid>
         </Border>
 
-        <TextBlock Grid.Row="4" Text="{Binding FooterText}"
+        <TextBlock Grid.Row="6" Text="{Binding FooterText}"
                    FontSize="12" Foreground="#95A5A6" Margin="0,8,0,0"/>
     </Grid>
 </UserControl>
