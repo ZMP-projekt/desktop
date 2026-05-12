@@ -80,7 +80,9 @@ public partial class AuditLogsViewModel : ObservableObject
         ApplyFilter();
 
         StatusText = _allLogs.Count > 0
-            ? $"Załadowano {_allLogs.Count} wpisów"
+            ? _apiService.LastResultFromCache
+                ? $"Tryb offline: załadowano {_allLogs.Count} wpisów z lokalnej kopii"
+                : $"Załadowano {_allLogs.Count} wpisów"
             : "Brak danych";
 
         IsLoading = false;

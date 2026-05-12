@@ -15,7 +15,9 @@ public class LoginResponse
 public class ApiService
 {
     private readonly HttpClient _httpClient;
+    private readonly OfflineCacheService _cacheService = new();
     public string Token { get; private set; } = string.Empty;
+    public bool LastResultFromCache { get; private set; }
 
     public ApiService()
     {
@@ -104,21 +106,26 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var clients = await response.Content.ReadFromJsonAsync<List<Client>>();
-                return clients ?? new List<Client>();
+                var result = clients ?? new List<Client>();
+                await _cacheService.SaveAsync("clients", result);
+                LastResultFromCache = false;
+                return result;
             }
             else
             {
                 string errorDetails = await response.Content.ReadAsStringAsync();
-                System.Windows.MessageBox.Show(
+                return await LoadCachedListAsync<Client>(
+                    "clients",
                     $"Serwer odmówił wydania listy użytkowników!\nStatus: {response.StatusCode}\nSzczegóły: {errorDetails}",
                     "Raport z API");
-                return new List<Client>();
             }
         }
         catch (Exception ex)
         {
-                System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd krytyczny");
-                return new List<Client>();
+                return await LoadCachedListAsync<Client>(
+                    "clients",
+                    $"Błąd połączenia: {ex.Message}",
+                    "Błąd krytyczny");
         }
     }
     public void Logout()
@@ -143,21 +150,26 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var users = await response.Content.ReadFromJsonAsync<List<User>>();
-                return users ?? new List<User>();
+                var result = users ?? new List<User>();
+                await _cacheService.SaveAsync("users", result);
+                LastResultFromCache = false;
+                return result;
             }
             else
             {
                 string errorDetails = await response.Content.ReadAsStringAsync();
-                System.Windows.MessageBox.Show(
+                return await LoadCachedListAsync<User>(
+                    "users",
                     $"Błąd pobierania użytkowników!\nStatus: {response.StatusCode}\n{errorDetails}",
                     "Błąd API");
-                return new List<User>();
             }
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd krytyczny");
-            return new List<User>();
+            return await LoadCachedListAsync<User>(
+                "users",
+                $"Błąd połączenia: {ex.Message}",
+                "Błąd krytyczny");
         }
     }
     public async Task<bool> DeleteUserAsync(int userId)
@@ -218,21 +230,26 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var classes = await response.Content.ReadFromJsonAsync<List<GymClass>>();
-                return classes ?? new List<GymClass>();
+                var result = classes ?? new List<GymClass>();
+                await _cacheService.SaveAsync(GetClassesCacheKey(date), result);
+                LastResultFromCache = false;
+                return result;
             }
             else
             {
                 string error = await response.Content.ReadAsStringAsync();
-                System.Windows.MessageBox.Show(
+                return await LoadCachedListAsync<GymClass>(
+                    GetClassesCacheKey(date),
                     $"Błąd pobierania zajęć!\nStatus: {response.StatusCode}\n{error}",
                     "Błąd API");
-                return new List<GymClass>();
             }
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
-            return new List<GymClass>();
+            return await LoadCachedListAsync<GymClass>(
+                GetClassesCacheKey(date),
+                $"Błąd połączenia: {ex.Message}",
+                "Błąd");
         }
     }
     public async Task<bool> CreateClassAsync(CreateClassRequest request)
@@ -313,13 +330,16 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var locations = await response.Content.ReadFromJsonAsync<List<Location>>();
-                return locations ?? new List<Location>();
+                var result = locations ?? new List<Location>();
+                await _cacheService.SaveAsync("locations", result);
+                LastResultFromCache = false;
+                return result;
             }
-            return new List<Location>();
+            return await LoadCachedListAsync<Location>("locations", "Nie udało się pobrać lokalizacji.", "Tryb offline");
         }
         catch
         {
-            return new List<Location>();
+            return await LoadCachedListAsync<Location>("locations", "Brak połączenia podczas pobierania lokalizacji.", "Tryb offline");
         }
     }
     public async Task<List<Trainer>> GetTrainersAsync()
@@ -335,13 +355,16 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var trainers = await response.Content.ReadFromJsonAsync<List<Trainer>>();
-                return trainers ?? new List<Trainer>();
+                var result = trainers ?? new List<Trainer>();
+                await _cacheService.SaveAsync("trainers", result);
+                LastResultFromCache = false;
+                return result;
             }
-            return new List<Trainer>();
+            return await LoadCachedListAsync<Trainer>("trainers", "Nie udało się pobrać trenerów.", "Tryb offline");
         }
         catch
         {
-            return new List<Trainer>();
+            return await LoadCachedListAsync<Trainer>("trainers", "Brak połączenia podczas pobierania trenerów.", "Tryb offline");
         }
     }
     public async Task<List<AuditLog>> GetAuditLogsAsync()
@@ -361,21 +384,26 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var logs = await response.Content.ReadFromJsonAsync<List<AuditLog>>();
-                return logs ?? new List<AuditLog>();
+                var result = logs ?? new List<AuditLog>();
+                await _cacheService.SaveAsync("audit-logs", result);
+                LastResultFromCache = false;
+                return result;
             }
             else
             {
                 string error = await response.Content.ReadAsStringAsync();
-                System.Windows.MessageBox.Show(
+                return await LoadCachedListAsync<AuditLog>(
+                    "audit-logs",
                     $"Błąd pobierania logów!\nStatus: {response.StatusCode}\n{error}",
                     "Błąd API");
-                return new List<AuditLog>();
             }
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
-            return new List<AuditLog>();
+            return await LoadCachedListAsync<AuditLog>(
+                "audit-logs",
+                $"Błąd połączenia: {ex.Message}",
+                "Błąd");
         }
     }
     public async Task<List<Notification>> GetNotificationsAsync()
@@ -391,14 +419,19 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var notifications = await response.Content.ReadFromJsonAsync<List<Notification>>();
-                return notifications ?? new List<Notification>();
+                var result = notifications ?? new List<Notification>();
+                await _cacheService.SaveAsync("notifications", result);
+                LastResultFromCache = false;
+                return result;
             }
-            return new List<Notification>();
+            return await LoadCachedListAsync<Notification>("notifications", "Nie udało się pobrać powiadomień.", "Tryb offline");
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd pobierania powiadomień: {ex.Message}", "Błąd");
-            return new List<Notification>();
+            return await LoadCachedListAsync<Notification>(
+                "notifications",
+                $"Błąd pobierania powiadomień: {ex.Message}",
+                "Błąd");
         }
     }
     public async Task<bool> MarkNotificationReadAsync(int id)
@@ -458,4 +491,24 @@ public class ApiService
             return false;
         }
     }
+
+    private async Task<List<T>> LoadCachedListAsync<T>(string cacheKey, string errorMessage, string title)
+    {
+        var cached = await _cacheService.LoadAsync<T>(cacheKey);
+        LastResultFromCache = cached.Count > 0;
+
+        if (cached.Count > 0)
+        {
+            System.Windows.MessageBox.Show(
+                $"{errorMessage}\n\nPokazuję ostatnią lokalną kopię danych.",
+                title);
+            return cached;
+        }
+
+        System.Windows.MessageBox.Show(errorMessage, title);
+        return new List<T>();
+    }
+
+    private static string GetClassesCacheKey(DateTime date)
+        => $"classes:{date:yyyy-MM-dd}";
 }

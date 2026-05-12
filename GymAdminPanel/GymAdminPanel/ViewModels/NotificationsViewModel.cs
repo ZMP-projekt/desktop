@@ -62,9 +62,10 @@ public partial class NotificationsViewModel : ObservableObject
         UnreadCount = _allNotifications.Count(n => !n.Read);
         ApplyFilter();
 
+        var offlinePrefix = _apiService.LastResultFromCache ? "Tryb offline: " : "";
         StatusText = UnreadCount > 0
-            ? $"{UnreadCount} nieprzeczytanych powiadomień"
-            : "Wszystkie powiadomienia przeczytane";
+            ? $"{offlinePrefix}{UnreadCount} nieprzeczytanych powiadomień"
+            : $"{offlinePrefix}Wszystkie powiadomienia przeczytane";
 
         IsLoading = false;
     }

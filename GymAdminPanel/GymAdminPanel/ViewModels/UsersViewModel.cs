@@ -62,7 +62,9 @@ public partial class UsersViewModel : ObservableObject
         ApplyFilter();
 
         StatusText = _allUsers.Count > 0
-            ? $"Załadowano {_allUsers.Count} użytkowników"
+            ? _apiService.LastResultFromCache
+                ? $"Tryb offline: załadowano {_allUsers.Count} użytkowników z lokalnej kopii"
+                : $"Załadowano {_allUsers.Count} użytkowników"
             : "Brak danych lub błąd połączenia";
 
         IsLoading = false;

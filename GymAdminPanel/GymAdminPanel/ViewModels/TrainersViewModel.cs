@@ -73,7 +73,9 @@ public partial class TrainersViewModel : ObservableObject
         _allTrainers = await _apiService.GetTrainersAsync();
         ApplyFilter();
 
-        StatusText = $"Trenerzy ({_allTrainers.Count})";
+        StatusText = _apiService.LastResultFromCache
+            ? $"Tryb offline: trenerzy ({_allTrainers.Count}) z lokalnej kopii"
+            : $"Trenerzy ({_allTrainers.Count})";
         IsLoading = false;
     }
 

@@ -94,7 +94,9 @@ public partial class ScheduleViewModel : ObservableObject
         Classes = new ObservableCollection<GymClass>(result);
 
         StatusText = Classes.Count > 0
-            ? $"Zajęcia na {SelectedDate:dd MMMM yyyy}"
+            ? _apiService.LastResultFromCache
+                ? $"Tryb offline: zajęcia na {SelectedDate:dd MMMM yyyy} z lokalnej kopii"
+                : $"Zajęcia na {SelectedDate:dd MMMM yyyy}"
             : $"Brak zajęć na {SelectedDate:dd MMMM yyyy}";
 
         FooterText = $"Łącznie: {Classes.Count} zajęć  ·  " +
