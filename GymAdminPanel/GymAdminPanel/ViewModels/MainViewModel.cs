@@ -22,6 +22,7 @@ public partial class MainViewModel : ObservableObject
     private int _unreadNotificationsCount;
 
     private readonly UsersViewModel _usersViewModel;
+    private readonly DashboardViewModel _dashboardViewModel;
     private readonly ScheduleViewModel _scheduleViewModel;
     private readonly AuditLogsViewModel _auditLogsViewModel;
     private readonly NotificationsViewModel _notificationsViewModel;
@@ -30,6 +31,7 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        _dashboardViewModel = new DashboardViewModel(apiService);
         _usersViewModel = new UsersViewModel(apiService);
         _scheduleViewModel = new ScheduleViewModel(apiService);
         _auditLogsViewModel = new AuditLogsViewModel(apiService);
@@ -42,7 +44,16 @@ public partial class MainViewModel : ObservableObject
                 UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
         };
 
-        ShowUsers();
+        ShowDashboard();
+    }
+
+    [RelayCommand]
+    private void ShowDashboard()
+    {
+        ActiveSection = "dashboard";
+        var view = new GymAdminPanel.Views.DashboardView();
+        view.DataContext = _dashboardViewModel;
+        CurrentView = view;
     }
 
     [RelayCommand]
