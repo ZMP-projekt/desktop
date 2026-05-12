@@ -41,7 +41,9 @@ public partial class LoginViewModel : ObservableObject
         }
         else
         {
-            ErrorMessage = "Błędny e-mail lub hasło!";
+            ErrorMessage = string.IsNullOrWhiteSpace(_apiService.LastLoginError)
+                ? "Błędny e-mail lub hasło!"
+                : _apiService.LastLoginError;
         }
     }
 

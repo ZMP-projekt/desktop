@@ -17,6 +17,7 @@ public class ApiService
     private readonly HttpClient _httpClient;
     private readonly OfflineCacheService _cacheService = new();
     public string Token { get; private set; } = string.Empty;
+    public string LastLoginError { get; private set; } = string.Empty;
     public bool LastResultFromCache { get; private set; }
 
     public ApiService()
@@ -69,6 +70,7 @@ public class ApiService
     }
     public async Task<bool> LoginAsync(string email, string password)
     {
+        LastLoginError = string.Empty;
         var requestData = new { email = email, password = password };
 
         try
@@ -81,15 +83,47 @@ public class ApiService
                 if (result != null && !string.IsNullOrWhiteSpace(result.Token))
                 {
                     Token = result.Token;
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", Token);
+
+                    var currentUser = await GetCurrentUserAsync();
+                    if (currentUser == null)
+                    {
+                        Logout();
+                        LastLoginError = "Nie udało się zweryfikować roli użytkownika.";
+                        return false;
+                    }
+
+                    if (!string.Equals(currentUser.Role, "ROLE_ADMIN", StringComparison.Ordinal))
+                    {
+                        Logout();
+                        LastLoginError = "Brak dostępu. Panel administracyjny jest dostępny tylko dla administratorów.";
+                        return false;
+                    }
+
                     return true;
                 }
             }
+            LastLoginError = "Błędny e-mail lub hasło!";
             return false;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logout();
+            LastLoginError = $"Błąd logowania: {ex.Message}";
             return false;
         }
+    }
+
+    private async Task<User?> GetCurrentUserAsync()
+    {
+        var response = await _httpClient.GetAsync("api/users/me");
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<User>();
     }
     public async Task<List<Client>> GetClientsAsync()
     {
