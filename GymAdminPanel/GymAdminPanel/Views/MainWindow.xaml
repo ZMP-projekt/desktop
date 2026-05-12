@@ -173,6 +173,63 @@
             </Grid>
         </Border>
 
-        <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Margin="18,16,18,0"
+                    Padding="12,10"
+                    CornerRadius="6"
+                    Background="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}}"
+                    BorderBrush="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}, ConverterParameter=Border}"
+                    BorderThickness="4,0,0,0"
+                    Visibility="{Binding IsStatusVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding StatusMessage}"
+                               Foreground="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}, ConverterParameter=Text}"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"
+                               VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="1"
+                            Content="Ponów"
+                            Command="{Binding RetryStatusCommand}"
+                            Visibility="{Binding CanRetryStatus, Converter={StaticResource BoolToVisibilityConverter}}"
+                            Margin="14,0,0,0"
+                            Padding="10,5"
+                            Cursor="Hand"
+                            BorderThickness="0"
+                            Background="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}, ConverterParameter=Border}"
+                            Foreground="White"
+                            FontWeight="SemiBold"/>
+
+                    <Button Grid.Column="2"
+                            Content="x"
+                            Command="{Binding DismissStatusCommand}"
+                            Margin="8,0,0,0"
+                            Width="28"
+                            Height="28"
+                            Cursor="Hand"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Foreground="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}, ConverterParameter=Text}"
+                            FontSize="18"
+                            FontWeight="SemiBold"/>
+                </Grid>
+            </Border>
+
+            <ContentControl Grid.Row="1" Content="{Binding CurrentView}"/>
+        </Grid>
     </Grid>
 </Window>

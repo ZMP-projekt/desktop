@@ -11,5 +11,6 @@
         <converters:BoolToTypeColorConverter   x:Key="BoolToTypeColorConverter"/>
         <converters:ActionToColorConverter     x:Key="ActionToColorConverter"/>
         <converters:IntToVisibilityConverter   x:Key="IntToVisibilityConverter"/>
+        <converters:StatusKindToBrushConverter x:Key="StatusKindToBrushConverter"/>
     </Application.Resources>
 </Application>

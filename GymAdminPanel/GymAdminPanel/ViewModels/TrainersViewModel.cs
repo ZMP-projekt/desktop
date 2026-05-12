@@ -121,7 +121,7 @@ public partial class TrainersViewModel : ObservableObject
 
         if (string.IsNullOrWhiteSpace(EditFirstName) || string.IsNullOrWhiteSpace(EditLastName))
         {
-            MessageBox.Show("Imię i nazwisko są wymagane.", "Walidacja");
+            _apiService.PublishStatus(AppStatusKind.Warning, "Imię i nazwisko są wymagane.");
             return;
         }
 
@@ -148,12 +148,14 @@ public partial class TrainersViewModel : ObservableObject
             IsEditPanelVisible = false;
             SelectedTrainer = null;
             StatusText = "Dane trenera zostały zaktualizowane.";
+            _apiService.PublishStatus(AppStatusKind.Success, StatusText);
 
             await LoadTrainersAsync();
         }
         else
         {
             StatusText = "Nie udało się zaktualizować danych trenera.";
+            _apiService.PublishStatus(AppStatusKind.Error, StatusText, true);
         }
 
         IsLoading = false;

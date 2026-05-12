@@ -107,10 +107,12 @@ public partial class UsersViewModel : ObservableObject
             _allUsers.Remove(user);
             ApplyFilter();
             StatusText = $"Użytkownik {user.Email} został usunięty.";
+            _apiService.PublishStatus(AppStatusKind.Success, StatusText);
         }
         else
         {
             StatusText = "Nie udało się usunąć użytkownika.";
+            _apiService.PublishStatus(AppStatusKind.Error, StatusText, true);
         }
 
         IsLoading = false;

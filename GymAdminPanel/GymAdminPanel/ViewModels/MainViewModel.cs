@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymAdminPanel.Models;
 using GymAdminPanel.Services;
 using System.Windows;
 
@@ -20,6 +21,18 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private int _unreadNotificationsCount;
+
+    [ObservableProperty]
+    private bool _isStatusVisible;
+
+    [ObservableProperty]
+    private string _statusMessage = string.Empty;
+
+    [ObservableProperty]
+    private AppStatusKind _statusKind = AppStatusKind.Info;
+
+    [ObservableProperty]
+    private bool _canRetryStatus;
 
     private readonly UsersViewModel _usersViewModel;
     private readonly DashboardViewModel _dashboardViewModel;
@@ -44,7 +57,53 @@ public partial class MainViewModel : ObservableObject
                 UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
         };
 
+        _apiService.StatusChanged += OnStatusChanged;
+
         ShowDashboard();
+    }
+
+    private void OnStatusChanged(AppStatus status)
+    {
+        StatusKind = status.Kind;
+        StatusMessage = status.Message;
+        CanRetryStatus = status.CanRetry;
+        IsStatusVisible = !string.IsNullOrWhiteSpace(status.Message);
+    }
+
+    [RelayCommand]
+    private void DismissStatus()
+    {
+        IsStatusVisible = false;
+        StatusMessage = string.Empty;
+        CanRetryStatus = false;
+    }
+
+    [RelayCommand]
+    private async Task RetryStatusAsync()
+    {
+        DismissStatus();
+
+        switch (ActiveSection)
+        {
+            case "dashboard":
+                await _dashboardViewModel.LoadDashboardCommand.ExecuteAsync(null);
+                break;
+            case "users":
+                await _usersViewModel.RefreshCommand.ExecuteAsync(null);
+                break;
+            case "schedule":
+                await _scheduleViewModel.LoadClassesCommand.ExecuteAsync(null);
+                break;
+            case "trainers":
+                await _trainersViewModel.LoadTrainersCommand.ExecuteAsync(null);
+                break;
+            case "auditlogs":
+                await _auditLogsViewModel.LoadLogsCommand.ExecuteAsync(null);
+                break;
+            case "notifications":
+                await _notificationsViewModel.LoadNotificationsCommand.ExecuteAsync(null);
+                break;
+        }
     }
 
     [RelayCommand]

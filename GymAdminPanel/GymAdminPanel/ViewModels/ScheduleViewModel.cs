@@ -320,23 +320,23 @@ public partial class ScheduleViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(NewName))
         {
-            MessageBox.Show("Podaj nazwę zajęć.", "Walidacja");
+            _apiService.PublishStatus(AppStatusKind.Warning, "Podaj nazwę zajęć.");
             return;
         }
         if (SelectedLocation == null)
         {
-            MessageBox.Show("Wybierz lokalizację.", "Walidacja");
+            _apiService.PublishStatus(AppStatusKind.Warning, "Wybierz lokalizację.");
             return;
         }
         if (!TimeSpan.TryParse(NewStartTime, out var startTs) ||
             !TimeSpan.TryParse(NewEndTime, out var endTs))
         {
-            MessageBox.Show("Podaj godziny w formacie HH:mm (np. 09:00).", "Walidacja");
+            _apiService.PublishStatus(AppStatusKind.Warning, "Podaj godziny w formacie HH:mm, np. 09:00.");
             return;
         }
         if (endTs <= startTs)
         {
-            MessageBox.Show("Godzina zakończenia musi być późniejsza niż rozpoczęcia.", "Walidacja");
+            _apiService.PublishStatus(AppStatusKind.Warning, "Godzina zakończenia musi być późniejsza niż rozpoczęcia.");
             return;
         }
 
@@ -357,7 +357,12 @@ public partial class ScheduleViewModel : ObservableObject
         {
             IsAddFormVisible = false;
             StatusText = $"Zajęcia \"{NewName}\" zostały dodane.";
+            _apiService.PublishStatus(AppStatusKind.Success, StatusText);
             await LoadClassesAsync();
+        }
+        else
+        {
+            _apiService.PublishStatus(AppStatusKind.Error, "Nie udało się dodać zajęć.", true);
         }
         IsLoading = false;
     }
@@ -386,10 +391,12 @@ public partial class ScheduleViewModel : ObservableObject
             Classes.Remove(gymClass);
             ApplyFilters();
             StatusText = $"Zajęcia \"{gymClass.Name}\" zostały usunięte.";
+            _apiService.PublishStatus(AppStatusKind.Success, StatusText);
         }
         else
         {
             StatusText = "Nie udało się usunąć zajęć.";
+            _apiService.PublishStatus(AppStatusKind.Error, StatusText, true);
         }
         IsLoading = false;
     }
@@ -405,7 +412,7 @@ public partial class ScheduleViewModel : ObservableObject
 
         if (participants.Count == 0)
         {
-            MessageBox.Show("Brak zapisanych uczestników.", gymClass.Name);
+            _apiService.PublishStatus(AppStatusKind.Info, $"Brak zapisanych uczestników na zajęcia: {gymClass.Name}.");
             return;
         }
 

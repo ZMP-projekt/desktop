@@ -19,6 +19,7 @@ public class ApiService
     public string Token { get; private set; } = string.Empty;
     public string LastLoginError { get; private set; } = string.Empty;
     public bool LastResultFromCache { get; private set; }
+    public event Action<AppStatus>? StatusChanged;
 
     public ApiService()
     {
@@ -129,7 +130,7 @@ public class ApiService
     {
         if (string.IsNullOrEmpty(Token))
         {
-            System.Windows.MessageBox.Show("Brak tokenu. Zaloguj się najpierw przed pobraniem danych.", "Błąd autoryzacji");
+            PublishStatus(AppStatusKind.Error, "Brak tokenu. Zaloguj się ponownie.");
             return new List<Client>();
         }
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
@@ -167,11 +168,21 @@ public class ApiService
         Token = string.Empty;
         _httpClient.DefaultRequestHeaders.Authorization = null;
     }
+
+    public void PublishStatus(AppStatusKind kind, string message, bool canRetry = false)
+    {
+        StatusChanged?.Invoke(new AppStatus
+        {
+            Kind = kind,
+            Message = message,
+            CanRetry = canRetry
+        });
+    }
     public async Task<List<User>> GetUsersAsync()
     {
         if (string.IsNullOrEmpty(Token))
         {
-            System.Windows.MessageBox.Show("Brak tokenu. Zaloguj się najpierw.", "Błąd autoryzacji");
+            PublishStatus(AppStatusKind.Error, "Brak tokenu. Zaloguj się ponownie.");
             return new List<User>();
         }
 
@@ -220,7 +231,7 @@ public class ApiService
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd usuwania: {ex.Message}", "Błąd");
+            PublishStatus(AppStatusKind.Error, $"Błąd usuwania użytkownika: {ex.Message}", true);
             return false;
         }
     }
@@ -241,7 +252,7 @@ public class ApiService
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd zmiany roli: {ex.Message}", "Błąd");
+            PublishStatus(AppStatusKind.Error, $"Błąd zmiany roli: {ex.Message}", true);
             return false;
         }
     }
@@ -249,7 +260,7 @@ public class ApiService
     {
         if (string.IsNullOrEmpty(Token))
         {
-            System.Windows.MessageBox.Show("Brak tokenu. Zaloguj się najpierw.", "Błąd autoryzacji");
+            PublishStatus(AppStatusKind.Error, "Brak tokenu. Zaloguj się ponownie.");
             return new List<GymClass>();
         }
 
@@ -299,15 +310,16 @@ public class ApiService
             if (!response.IsSuccessStatusCode)
             {
                 string error = await response.Content.ReadAsStringAsync();
-                System.Windows.MessageBox.Show(
-                    $"Błąd tworzenia zajęć!\nStatus: {response.StatusCode}\n{error}\n\n" +
-                    "Błąd API");
+                PublishStatus(
+                    AppStatusKind.Error,
+                    $"Nie udało się utworzyć zajęć. Status: {response.StatusCode}. {error}",
+                    true);
             }
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
+            PublishStatus(AppStatusKind.Error, $"Błąd połączenia podczas tworzenia zajęć: {ex.Message}", true);
             return false;
         }
     }
@@ -325,7 +337,7 @@ public class ApiService
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd usuwania: {ex.Message}", "Błąd");
+            PublishStatus(AppStatusKind.Error, $"Błąd usuwania zajęć: {ex.Message}", true);
             return false;
         }
     }
@@ -405,7 +417,7 @@ public class ApiService
     {
         if (string.IsNullOrEmpty(Token))
         {
-            System.Windows.MessageBox.Show("Brak tokenu. Zaloguj się najpierw.", "Błąd autoryzacji");
+            PublishStatus(AppStatusKind.Error, "Brak tokenu. Zaloguj się ponownie.");
             return new List<AuditLog>();
         }
 
@@ -512,16 +524,17 @@ public class ApiService
             if (!response.IsSuccessStatusCode)
             {
                 string error = await response.Content.ReadAsStringAsync();
-                System.Windows.MessageBox.Show(
-                    $"Błąd aktualizacji trenera!\nStatus: {response.StatusCode}\n{error}",
-                    "Błąd API");
+                PublishStatus(
+                    AppStatusKind.Error,
+                    $"Nie udało się zaktualizować trenera. Status: {response.StatusCode}. {error}",
+                    true);
             }
 
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
+            PublishStatus(AppStatusKind.Error, $"Błąd połączenia podczas aktualizacji trenera: {ex.Message}", true);
             return false;
         }
     }
@@ -533,13 +546,14 @@ public class ApiService
 
         if (cached.Count > 0)
         {
-            System.Windows.MessageBox.Show(
-                $"{errorMessage}\n\nPokazuję ostatnią lokalną kopię danych.",
-                title);
+            PublishStatus(
+                AppStatusKind.Warning,
+                $"{errorMessage} Pokazuję ostatnią lokalną kopię danych.",
+                true);
             return cached;
         }
 
-        System.Windows.MessageBox.Show(errorMessage, title);
+        PublishStatus(AppStatusKind.Error, errorMessage, true);
         return new List<T>();
     }
 

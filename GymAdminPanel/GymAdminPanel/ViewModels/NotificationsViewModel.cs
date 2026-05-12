@@ -98,6 +98,7 @@ public partial class NotificationsViewModel : ObservableObject
             StatusText = UnreadCount > 0
                 ? $"{UnreadCount} nieprzeczytanych powiadomień"
                 : "Wszystkie powiadomienia przeczytane";
+            _apiService.PublishStatus(AppStatusKind.Success, "Powiadomienie oznaczone jako przeczytane.");
         }
     }
 
@@ -115,6 +116,7 @@ public partial class NotificationsViewModel : ObservableObject
         UnreadCount = 0;
         ApplyFilter();
         StatusText = "Wszystkie powiadomienia przeczytane";
+        _apiService.PublishStatus(AppStatusKind.Success, StatusText);
         IsLoading = false;
     }
 
@@ -129,6 +131,11 @@ public partial class NotificationsViewModel : ObservableObject
             _allNotifications.Remove(notification);
             if (!notification.Read) UnreadCount--;
             ApplyFilter();
+            _apiService.PublishStatus(AppStatusKind.Success, "Powiadomienie zostało usunięte.");
+        }
+        else
+        {
+            _apiService.PublishStatus(AppStatusKind.Error, "Nie udało się usunąć powiadomienia.", true);
         }
     }
 
@@ -138,7 +145,7 @@ public partial class NotificationsViewModel : ObservableObject
         var read = _allNotifications.Where(n => n.Read).ToList();
         if (read.Count == 0)
         {
-            MessageBox.Show("Brak przeczytanych powiadomień do usunięcia.", "Info");
+            _apiService.PublishStatus(AppStatusKind.Info, "Brak przeczytanych powiadomień do usunięcia.");
             return;
         }
 
@@ -157,6 +164,7 @@ public partial class NotificationsViewModel : ObservableObject
         foreach (var n in read) _allNotifications.Remove(n);
         ApplyFilter();
         StatusText = $"Usunięto {read.Count} powiadomień";
+        _apiService.PublishStatus(AppStatusKind.Success, StatusText);
         IsLoading = false;
     }
 }
