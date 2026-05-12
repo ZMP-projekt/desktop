@@ -76,6 +76,9 @@ public partial class UsersViewModel : ObservableObject
             ? _allUsers
             : _allUsers.Where(u =>
                 (u.Email?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (u.FirstName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (u.LastName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (u.FullName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (u.Role?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false))
               .ToList();
 
@@ -108,39 +111,6 @@ public partial class UsersViewModel : ObservableObject
         else
         {
             StatusText = "Nie udało się usunąć użytkownika.";
-        }
-
-        IsLoading = false;
-    }
-
-    [RelayCommand]
-    private async Task ChangeRoleAsync(User user)
-    {
-        if (user == null) return;
-
-        // Prosta lista ról — możesz rozbudować o osobne okno dialogowe
-        var newRole = user.Role == "ROLE_USER" ? "ROLE_ADMIN" : "ROLE_USER";
-
-        var result = MessageBox.Show(
-            $"Zmienić rolę użytkownika {user.Email}?\n\n{user.Role}  →  {newRole}",
-            "Zmiana roli",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
-        if (result != MessageBoxResult.Yes) return;
-
-        IsLoading = true;
-        var success = await _apiService.ChangeUserRoleAsync(user.Id, newRole);
-
-        if (success)
-        {
-            user.Role = newRole;
-            ApplyFilter(); // odśwież widok
-            StatusText = $"Rola użytkownika {user.Email} została zmieniona na {newRole}.";
-        }
-        else
-        {
-            StatusText = "Nie udało się zmienić roli.";
         }
 
         IsLoading = false;

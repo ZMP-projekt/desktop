@@ -11,7 +11,16 @@ public partial class User : ObservableObject
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
+    [JsonPropertyName("firstName")]
+    public string FirstName { get; set; } = string.Empty;
+
+    [JsonPropertyName("lastName")]
+    public string LastName { get; set; } = string.Empty;
+
     [JsonPropertyName("role")]
     [ObservableProperty]
     private string _role = string.Empty;
+
+    public string FullName => $"{FirstName} {LastName}".Trim();
+    public string DisplayName => string.IsNullOrWhiteSpace(FullName) ? Email : FullName;
 }
