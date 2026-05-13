@@ -22,9 +22,14 @@ public class ApiService
     public event Action<AppStatus>? StatusChanged;
 
     public ApiService()
+        : this(new HttpClient { BaseAddress = new Uri("https://api-j6d6.onrender.com/") })
     {
-        _httpClient = new HttpClient();
-        _httpClient.BaseAddress = new Uri("https://api-j6d6.onrender.com/");
+    }
+
+    public ApiService(HttpClient httpClient)
+    {
+        _httpClient = httpClient;
+        _httpClient.BaseAddress ??= new Uri("https://api-j6d6.onrender.com/");
     }
     public async Task<bool> RegisterAsync(string firstName, string lastName, string email, string password)
     {
