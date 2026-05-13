@@ -31,49 +31,6 @@ public class ApiService
         _httpClient = httpClient;
         _httpClient.BaseAddress ??= new Uri("https://api-j6d6.onrender.com/");
     }
-    public async Task<bool> RegisterAsync(string firstName, string lastName, string email, string password)
-    {
-        var requestData = new
-        {
-            email = email,
-            password = password,
-            role = "ROLE_USER",
-            firstName = firstName,
-            lastName = lastName
-        };
-
-        try
-        {
-            var response = await _httpClient.PostAsJsonAsync("auth/register", requestData);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-                if (result != null && !string.IsNullOrWhiteSpace(result.Token))
-                {
-                    Token = result.Token;
-                    System.Windows.MessageBox.Show("Rejestracja udana!\nZostałeś automatycznie zalogowany.", "Sukces");
-                }
-                return true;
-            }
-            else
-            {
-                string errorDetails = await response.Content.ReadAsStringAsync();
-                System.Windows.MessageBox.Show(
-                    $"Serwer odrzucił rejestrację!\n" +
-                    $"Status: {response.StatusCode}\n\n" +
-                    $"Szczegóły: {errorDetails}\n\n" +
-                    $"URL: auth/register",
-                    "Raport z API");
-                return false;
-            }
-        }
-        catch (Exception ex) 
-        {
-            System.Windows.MessageBox.Show($"Błąd połączenia: {ex.Message}", "Błąd");
-            return false;
-        }
-    }
     public async Task<bool> LoginAsync(string email, string password)
     {
         LastLoginError = string.Empty;

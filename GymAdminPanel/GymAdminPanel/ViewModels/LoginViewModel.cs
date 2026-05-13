@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using GymAdminPanel.Services;
 using GymAdminPanel.Views;
-using GymAdminPanel.ViewModels;
 using System.Windows;
 using System.Threading.Tasks;
 
@@ -45,12 +44,5 @@ public partial class LoginViewModel : ObservableObject
                 ? "Błędny e-mail lub hasło!"
                 : _apiService.LastLoginError;
         }
-    }
-
-    [RelayCommand]
-    private void OpenRegister()
-    {
-        var registerWindow = new GymAdminPanel.Views.RegisterWindow();
-        registerWindow.ShowDialog();
     }
 }
