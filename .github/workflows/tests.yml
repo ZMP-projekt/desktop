@@ -19,10 +19,10 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Restore
-        run: dotnet restore GymAdminPanel.sln
+        run: dotnet restore GymAdminPanel/GymAdminPanel.sln
 
       - name: Build
-        run: dotnet build GymAdminPanel.sln --no-restore --configuration Release
+        run: dotnet build GymAdminPanel/GymAdminPanel.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test GymAdminPanel.Tests/GymAdminPanel.Tests.csproj --no-build --configuration Release --verbosity minimal
+        run: dotnet test GymAdminPanel/GymAdminPanel.Tests/GymAdminPanel.Tests.csproj --no-build --configuration Release --verbosity minimal
