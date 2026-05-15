@@ -57,11 +57,10 @@ public class ApiServiceAdminUserTests
         var patchRequest = handler.Requests[2];
         Assert.Equal(HttpMethod.Patch, patchRequest.Method);
         Assert.Equal("/api/admin/users/456/role", patchRequest.RequestUri?.AbsolutePath);
+        Assert.Equal("role=ROLE_ADMIN", patchRequest.RequestUri?.Query.TrimStart('?'));
         Assert.Equal("Bearer", patchRequest.Headers.Authorization?.Scheme);
         Assert.Equal("admin-token", patchRequest.Headers.Authorization?.Parameter);
-
-        var body = await patchRequest.Content!.ReadAsStringAsync();
-        Assert.Contains("\"role\":\"ROLE_ADMIN\"", body);
+        Assert.Null(patchRequest.Content);
     }
 
     [Fact]
