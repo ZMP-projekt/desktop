@@ -199,17 +199,29 @@ public class ApiService
     }
     public async Task<bool> ChangeUserRoleAsync(int userId, string newRole)
     {
-        if (string.IsNullOrEmpty(Token)) return false;
+        if (string.IsNullOrEmpty(Token))
+        {
+            PublishStatus(AppStatusKind.Error, "Brak tokenu. Zaloguj się ponownie.");
+            return false;
+        }
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
 
-        var requestData = new { role = newRole };
-
         try
         {
-            var response = await _httpClient.PatchAsJsonAsync(
-                $"api/admin/users/{userId}/role", requestData);
+            var roleParam = Uri.EscapeDataString(newRole);
+            var response = await _httpClient.PatchAsync(
+                $"api/admin/users/{userId}/role?role={roleParam}", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                PublishStatus(
+                    AppStatusKind.Error,
+                    $"Błąd zmiany roli: {response.StatusCode}. {error}",
+                    true);
+            }
+
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using GymAdminPanel.Models;
 using GymAdminPanel.Services;
+using System.Threading;
 using System.Windows;
 
 namespace GymAdminPanel.ViewModels;
@@ -9,6 +10,7 @@ namespace GymAdminPanel.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private CancellationTokenSource? _statusAutoDismissCts;
 
     [ObservableProperty]
     private object? _currentView;
@@ -68,14 +70,35 @@ public partial class MainViewModel : ObservableObject
         StatusMessage = status.Message;
         CanRetryStatus = status.CanRetry;
         IsStatusVisible = !string.IsNullOrWhiteSpace(status.Message);
+
+        if (IsStatusVisible)
+            StartStatusAutoDismiss();
     }
 
     [RelayCommand]
     private void DismissStatus()
     {
+        _statusAutoDismissCts?.Cancel();
         IsStatusVisible = false;
         StatusMessage = string.Empty;
         CanRetryStatus = false;
+    }
+
+    private async void StartStatusAutoDismiss()
+    {
+        _statusAutoDismissCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _statusAutoDismissCts = cts;
+
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), cts.Token);
+            if (!cts.IsCancellationRequested)
+                DismissStatus();
+        }
+        catch (TaskCanceledException)
+        {
+        }
     }
 
     [RelayCommand]

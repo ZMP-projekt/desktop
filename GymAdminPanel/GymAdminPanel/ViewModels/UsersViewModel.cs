@@ -82,7 +82,12 @@ public partial class UsersViewModel : ObservableObject
                 (u.Role?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false))
               .ToList();
 
-        FilteredUsers = new ObservableCollection<User>(filtered);
+        var selectedUserId = SelectedUser?.Id;
+
+        FilteredUsers = new ObservableCollection<User>(filtered.OrderBy(u => u.Id));
+        if (selectedUserId.HasValue)
+            SelectedUser = FilteredUsers.FirstOrDefault(u => u.Id == selectedUserId.Value);
+
         FooterText = $"Wyświetlono: {FilteredUsers.Count} z {_allUsers.Count} użytkowników";
     }
 
@@ -117,6 +122,49 @@ public partial class UsersViewModel : ObservableObject
 
         IsLoading = false;
     }
+
+    [RelayCommand]
+    private async Task ChangeRoleAsync(User user)
+    {
+        if (user == null) return;
+
+        var currentRole = string.IsNullOrWhiteSpace(user.Role) ? "ROLE_USER" : user.Role;
+        var newRole = GetNextRole(currentRole);
+
+        var result = MessageBox.Show(
+            $"Zmienić rolę użytkownika?\n\nEmail: {user.Email}\n{currentRole} → {newRole}",
+            "Zmiana roli",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes) return;
+
+        IsLoading = true;
+        var success = await _apiService.ChangeUserRoleAsync(user.Id, newRole);
+
+        if (success)
+        {
+            user.Role = newRole;
+            ApplyFilter();
+            StatusText = $"Rola użytkownika {user.Email} została zmieniona na {newRole}.";
+            _apiService.PublishStatus(AppStatusKind.Success, StatusText);
+        }
+        else
+        {
+            StatusText = "Nie udało się zmienić roli użytkownika.";
+        }
+
+        IsLoading = false;
+    }
+
+    private static string GetNextRole(string role)
+        => role switch
+        {
+            "ROLE_USER" => "ROLE_TRAINER",
+            "ROLE_TRAINER" => "ROLE_ADMIN",
+            "ROLE_ADMIN" => "ROLE_USER",
+            _ => "ROLE_USER"
+        };
 
     [RelayCommand]
     private void Logout(Window currentWindow)

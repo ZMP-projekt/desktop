@@ -79,7 +79,7 @@
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
-                        <TextBlock Text="👥  Klienci" FontSize="13"/>
+                        <TextBlock Text="👥  Użytkownicy" FontSize="13"/>
                     </Button>
 
                     <Button Command="{Binding ShowScheduleCommand}">
@@ -174,23 +174,20 @@
         </Border>
 
         <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            <ContentControl Content="{Binding CurrentView}"/>
 
-            <Border Grid.Row="0"
-                    Margin="18,16,18,0"
+            <Border Margin="18,16,18,0"
                     Padding="12,10"
                     CornerRadius="6"
                     Background="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}}"
                     BorderBrush="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}, ConverterParameter=Border}"
                     BorderThickness="4,0,0,0"
+                    VerticalAlignment="Top"
+                    Panel.ZIndex="20"
                     Visibility="{Binding IsStatusVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
@@ -203,18 +200,6 @@
                                VerticalAlignment="Center"/>
 
                     <Button Grid.Column="1"
-                            Content="Ponów"
-                            Command="{Binding RetryStatusCommand}"
-                            Visibility="{Binding CanRetryStatus, Converter={StaticResource BoolToVisibilityConverter}}"
-                            Margin="14,0,0,0"
-                            Padding="10,5"
-                            Cursor="Hand"
-                            BorderThickness="0"
-                            Background="{Binding StatusKind, Converter={StaticResource StatusKindToBrushConverter}, ConverterParameter=Border}"
-                            Foreground="White"
-                            FontWeight="SemiBold"/>
-
-                    <Button Grid.Column="2"
                             Content="x"
                             Command="{Binding DismissStatusCommand}"
                             Margin="8,0,0,0"
@@ -228,8 +213,6 @@
                             FontWeight="SemiBold"/>
                 </Grid>
             </Border>
-
-            <ContentControl Grid.Row="1" Content="{Binding CurrentView}"/>
         </Grid>
     </Grid>
 </Window>
