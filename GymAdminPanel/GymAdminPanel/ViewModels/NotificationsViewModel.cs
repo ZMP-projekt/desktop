@@ -29,6 +29,9 @@ public partial class NotificationsViewModel : ObservableObject
     [ObservableProperty]
     private int _unreadCount;
 
+    [ObservableProperty]
+    private bool _isEmpty = true;
+
     private string _selectedFilter = "Wszystkie";
     public string SelectedFilter
     {
@@ -63,9 +66,11 @@ public partial class NotificationsViewModel : ObservableObject
         ApplyFilter();
 
         var offlinePrefix = _apiService.LastResultFromCache ? "Tryb offline: " : "";
-        StatusText = UnreadCount > 0
-            ? $"{offlinePrefix}{UnreadCount} nieprzeczytanych powiadomień"
-            : $"{offlinePrefix}Wszystkie powiadomienia przeczytane";
+        StatusText = _allNotifications.Count == 0
+            ? $"{offlinePrefix}Brak powiadomień dla zalogowanego konta"
+            : UnreadCount > 0
+                ? $"{offlinePrefix}{UnreadCount} nieprzeczytanych powiadomień"
+                : $"{offlinePrefix}Wszystkie powiadomienia przeczytane";
 
         IsLoading = false;
     }
@@ -80,6 +85,7 @@ public partial class NotificationsViewModel : ObservableObject
         };
 
         FilteredNotifications = new ObservableCollection<Notification>(filtered);
+        IsEmpty = FilteredNotifications.Count == 0;
         FooterText = $"Wyświetlono: {FilteredNotifications.Count} z {_allNotifications.Count}  ·  " +
                      $"Nieprzeczytanych: {UnreadCount}";
     }
@@ -106,7 +112,11 @@ public partial class NotificationsViewModel : ObservableObject
     private async Task MarkAllReadAsync()
     {
         var unread = _allNotifications.Where(n => !n.Read).ToList();
-        if (unread.Count == 0) return;
+        if (unread.Count == 0)
+        {
+            _apiService.PublishStatus(AppStatusKind.Info, "Brak nieprzeczytanych powiadomień.");
+            return;
+        }
 
         IsLoading = true;
         var tasks = unread.Select(n => _apiService.MarkNotificationReadAsync(n.Id));

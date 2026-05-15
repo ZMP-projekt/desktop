@@ -58,6 +58,7 @@ public partial class MainViewModel : ObservableObject
             if (e.PropertyName == nameof(NotificationsViewModel.UnreadCount))
                 UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
         };
+        UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
 
         _apiService.StatusChanged += OnStatusChanged;
 
@@ -163,6 +164,7 @@ public partial class MainViewModel : ObservableObject
         var view = new GymAdminPanel.Views.TrainersView();
         view.DataContext = _trainersViewModel;
         CurrentView = view;
+        _ = _trainersViewModel.LoadTrainersCommand.ExecuteAsync(null);
     }
 
     [RelayCommand]
@@ -181,6 +183,7 @@ public partial class MainViewModel : ObservableObject
         var view = new GymAdminPanel.Views.NotificationsView();
         view.DataContext = _notificationsViewModel;
         CurrentView = view;
+        _ = _notificationsViewModel.LoadNotificationsCommand.ExecuteAsync(null);
     }
 
     [RelayCommand]
