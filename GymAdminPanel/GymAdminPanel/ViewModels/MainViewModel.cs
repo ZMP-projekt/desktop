@@ -22,6 +22,9 @@ public partial class MainViewModel : ObservableObject
     private string _title = "Panel Administratora Siłowni";
 
     [ObservableProperty]
+    private string _currentSectionTitle = "Dashboard";
+
+    [ObservableProperty]
     private int _unreadNotificationsCount;
 
     [ObservableProperty]
@@ -106,7 +109,12 @@ public partial class MainViewModel : ObservableObject
     private async Task RetryStatusAsync()
     {
         DismissStatus();
+        await RefreshCurrentSectionAsync();
+    }
 
+    [RelayCommand]
+    private async Task RefreshCurrentSectionAsync()
+    {
         switch (ActiveSection)
         {
             case "dashboard":
@@ -134,6 +142,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowDashboard()
     {
         ActiveSection = "dashboard";
+        CurrentSectionTitle = "Dashboard";
         var view = new GymAdminPanel.Views.DashboardView();
         view.DataContext = _dashboardViewModel;
         CurrentView = view;
@@ -143,6 +152,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowUsers()
     {
         ActiveSection = "users";
+        CurrentSectionTitle = "Użytkownicy";
         var view = new GymAdminPanel.Views.UsersView();
         view.DataContext = _usersViewModel;
         CurrentView = view;
@@ -152,6 +162,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowSchedule()
     {
         ActiveSection = "schedule";
+        CurrentSectionTitle = "Harmonogram";
         var view = new GymAdminPanel.Views.ScheduleView();
         view.DataContext = _scheduleViewModel;
         CurrentView = view;
@@ -161,6 +172,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowTrainers()
     {
         ActiveSection = "trainers";
+        CurrentSectionTitle = "Trenerzy";
         var view = new GymAdminPanel.Views.TrainersView();
         view.DataContext = _trainersViewModel;
         CurrentView = view;
@@ -171,6 +183,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowAuditLogs()
     {
         ActiveSection = "auditlogs";
+        CurrentSectionTitle = "Logi audytowe";
         var view = new GymAdminPanel.Views.AuditLogsView();
         view.DataContext = _auditLogsViewModel;
         CurrentView = view;
@@ -180,6 +193,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowNotifications()
     {
         ActiveSection = "notifications";
+        CurrentSectionTitle = "Powiadomienia";
         var view = new GymAdminPanel.Views.NotificationsView();
         view.DataContext = _notificationsViewModel;
         CurrentView = view;

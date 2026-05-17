@@ -37,6 +37,10 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<AuditLog> _recentAuditLogs = new();
 
+    public bool HasTodayClasses => TodayClasses.Count > 0;
+
+    public bool HasRecentAuditLogs => RecentAuditLogs.Count > 0;
+
     public DashboardViewModel(ApiService apiService)
     {
         _apiService = apiService;
@@ -78,4 +82,10 @@ public partial class DashboardViewModel : ObservableObject
 
         IsLoading = false;
     }
+
+    partial void OnTodayClassesChanged(ObservableCollection<GymClass> value)
+        => OnPropertyChanged(nameof(HasTodayClasses));
+
+    partial void OnRecentAuditLogsChanged(ObservableCollection<AuditLog> value)
+        => OnPropertyChanged(nameof(HasRecentAuditLogs));
 }

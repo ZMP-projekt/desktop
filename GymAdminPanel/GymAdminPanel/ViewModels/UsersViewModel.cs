@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using GymAdminPanel.Models;
 using GymAdminPanel.Services;
+using GymAdminPanel.Views;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -96,13 +97,13 @@ public partial class UsersViewModel : ObservableObject
     {
         if (user == null) return;
 
-        var result = MessageBox.Show(
-            $"Czy na pewno chcesz usunąć użytkownika?\n\nEmail: {user.Email}\nID: {user.Id}",
+        var result = ConfirmDialog.Show(
             "Potwierdzenie usunięcia",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
+            "Czy na pewno chcesz usunąć użytkownika?",
+            $"Email: {user.Email}\nID: {user.Id}",
+            ConfirmDialogKind.Warning);
 
-        if (result != MessageBoxResult.Yes) return;
+        if (!result) return;
 
         IsLoading = true;
         var success = await _apiService.DeleteUserAsync(user.Id);
@@ -131,13 +132,13 @@ public partial class UsersViewModel : ObservableObject
         var currentRole = string.IsNullOrWhiteSpace(user.Role) ? "ROLE_USER" : user.Role;
         var newRole = GetNextRole(currentRole);
 
-        var result = MessageBox.Show(
-            $"Zmienić rolę użytkownika?\n\nEmail: {user.Email}\n{currentRole} → {newRole}",
+        var result = ConfirmDialog.Show(
             "Zmiana roli",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
+            "Zmienić rolę użytkownika?",
+            $"Email: {user.Email}\n{currentRole} → {newRole}",
+            ConfirmDialogKind.Question);
 
-        if (result != MessageBoxResult.Yes) return;
+        if (!result) return;
 
         IsLoading = true;
         var success = await _apiService.ChangeUserRoleAsync(user.Id, newRole);

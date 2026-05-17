@@ -1,111 +1,367 @@
-﻿<UserControl x:Class="GymAdminPanel.Views.AuditLogsView"
+<UserControl x:Class="GymAdminPanel.Views.AuditLogsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Background="#F4F6F9">
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             Background="#0E131F"
+             FontFamily="Segoe UI">
 
-    <Grid Margin="24">
+    <UserControl.Resources>
+        <Style x:Key="DarkScrollBarThumbStyle" TargetType="Thumb">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Border Background="#4B556B"
+                                CornerRadius="4"
+                                Margin="3"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ScrollBar">
+            <Setter Property="Width" Value="12"/>
+            <Setter Property="Background" Value="#151B27"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid Background="{TemplateBinding Background}">
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb Style="{StaticResource DarkScrollBarThumbStyle}"/>
+                                </Track.Thumb>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DarkComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="MinWidth" Value="210"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="Foreground" Value="#F4F7FF"/>
+            <Setter Property="Background" Value="#151B27"/>
+            <Setter Property="BorderBrush" Value="#343B4D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="ScrollViewer.CanContentScroll" Value="False"/>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Foreground" Value="#DDE3F1"/>
+                        <Setter Property="Background" Value="#151B27"/>
+                        <Setter Property="Padding" Value="12,9"/>
+                        <Setter Property="FontSize" Value="13"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <Border x:Name="ItemRoot"
+                                            Background="{TemplateBinding Background}"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="ItemRoot" Property="Background" Value="#252F45"/>
+                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="ItemRoot" Property="Background" Value="#2B3560"/>
+                                            <Setter Property="Foreground" Value="#FFFFFF"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                          ClickMode="Press"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="ToggleRoot"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="8">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="34"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ContentPresenter Margin="14,0,0,0"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalAlignment="Center"
+                                                                  RecognizesAccessKey="True"/>
+                                                <iconPacks:PackIconMaterial Grid.Column="1"
+                                                                            Kind="ChevronDown"
+                                                                            Width="18"
+                                                                            Height="18"
+                                                                            Foreground="#9EA6B8"
+                                                                            HorizontalAlignment="Center"
+                                                                            VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="ToggleRoot" Property="BorderBrush" Value="#566987"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="ToggleRoot" Property="BorderBrush" Value="#668AFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+
+                            <ContentPresenter x:Name="ContentSite"
+                                              Content="{TemplateBinding SelectionBoxItem}"
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                                              Margin="14,0,34,0"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center"
+                                              IsHitTestVisible="False"/>
+
+                            <Popup x:Name="Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Fade">
+                                <Border Background="#151B27"
+                                        BorderBrush="#3A445A"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        MinWidth="{TemplateBinding ActualWidth}"
+                                        MaxHeight="188">
+                                    <ScrollViewer Margin="0,4"
+                                                  VerticalAlignment="Top"
+                                                  VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="30,30,30,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="Logi Audytowe"
-                       FontSize="28" FontWeight="Light" Foreground="#2C3E50"/>
-            <TextBlock Text="{Binding StatusText}"
-                       FontSize="13" Foreground="#7F8C8D" Margin="0,4,0,0"/>
-        </StackPanel>
-
-        <Grid Grid.Row="1" Margin="0,0,0,12">
+        <Grid Grid.Row="0" Margin="0,0,0,26">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="220"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBox Grid.Column="0"
-                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                     Padding="10,8" FontSize="14" Margin="0,0,8,0"
-                     Background="White" BorderBrush="#DDE1E7" BorderThickness="1"
-                     VerticalContentAlignment="Center">
-                <TextBox.Style>
-                    <Style TargetType="TextBox">
-                        <Style.Triggers>
-                            <Trigger Property="Text" Value="">
-                                <Setter Property="Background">
-                                    <Setter.Value>
-                                        <VisualBrush AlignmentX="Left" AlignmentY="Center" Stretch="None">
-                                            <VisualBrush.Visual>
-                                                <TextBlock Text="🔍  Szukaj po osobie, akcji lub szczegółach..."
-                                                           Foreground="#AAB0B8" FontSize="14" Margin="10,0,0,0"/>
-                                            </VisualBrush.Visual>
-                                        </VisualBrush>
-                                    </Setter.Value>
-                                </Setter>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBox.Style>
-            </TextBox>
+            <StackPanel>
+                <TextBlock Text="Logi Audytowe"
+                           FontSize="34"
+                           FontWeight="Bold"
+                           Foreground="#F4F7FF"/>
+                <TextBlock Text="{Binding StatusText}"
+                           FontSize="15"
+                           Foreground="#A8AFBF"
+                           FontWeight="SemiBold"
+                           Margin="0,6,0,0"/>
+            </StackPanel>
 
-            <ComboBox Grid.Column="1"
-                      ItemsSource="{Binding ActionFilters}"
-                      SelectedItem="{Binding SelectedActionFilter}"
-                      Padding="10,8" FontSize="13" Margin="0,0,8,0"
-                      Background="White" BorderBrush="#DDE1E7"/>
-
-            <Button Grid.Column="2"
-                    Content="🔄 Odśwież"
-                    Command="{Binding LoadLogsCommand}"
-                    Padding="14,8"
-                    Background="#2980B9" Foreground="White"
-                    FontWeight="SemiBold" BorderThickness="0"
-                    Cursor="Hand" FontSize="13"/>
+            <Border Grid.Column="1"
+                    Height="48"
+                    Background="#171C28"
+                    BorderBrush="#343B4D"
+                    BorderThickness="1"
+                    CornerRadius="10"
+                    Padding="14,0"
+                    VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Filtruj:"
+                               Foreground="#A8AFBF"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0"/>
+                    <ComboBox ItemsSource="{Binding ActionFilters}"
+                              SelectedItem="{Binding SelectedActionFilter}"
+                              Style="{StaticResource DarkComboBoxStyle}"
+                              MinWidth="190"/>
+                </StackPanel>
+            </Border>
         </Grid>
 
-        <Border Grid.Row="2" Background="White"
-                BorderBrush="#DDE1E7" BorderThickness="1" CornerRadius="4">
+        <Border Grid.Row="1"
+                Height="66"
+                MaxWidth="760"
+                HorizontalAlignment="Left"
+                Background="#171C28"
+                BorderBrush="#343B4D"
+                BorderThickness="1"
+                CornerRadius="14"
+                Padding="18,0"
+                Margin="0,0,0,24">
             <Grid>
-                <Grid Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
-                      Background="#88FFFFFF" Panel.ZIndex="10">
-                    <TextBlock Text="⏳ Ładowanie logów..."
-                               FontSize="16" Foreground="#2C3E50"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="34"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <DataGrid ItemsSource="{Binding FilteredLogs}"
+                <iconPacks:PackIconMaterial Kind="Magnify"
+                                            Width="22"
+                                            Height="22"
+                                            Foreground="#C6CDDB"
+                                            VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Height="46"
+                         FontSize="17"
+                         Foreground="#F4F7FF"
+                         CaretBrush="#8DA5FF"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         VerticalContentAlignment="Center">
+                    <TextBox.Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Grid>
+                                            <ScrollViewer x:Name="PART_ContentHost"/>
+                                            <TextBlock Text="Szukaj po osobie, akcji lub szczegółach..."
+                                                       Foreground="#687185"
+                                                       FontSize="17"
+                                                       VerticalAlignment="Center"
+                                                       IsHitTestVisible="False">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource TemplatedParent}}" Value="">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </TextBox.Style>
+                </TextBox>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2"
+                Background="#171C28"
+                BorderBrush="#343B4D"
+                BorderThickness="1"
+                CornerRadius="16"
+                ClipToBounds="True">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="58"/>
+                </Grid.RowDefinitions>
+
+                <DataGrid Grid.Row="0"
+                          ItemsSource="{Binding FilteredLogs}"
                           AutoGenerateColumns="False"
                           IsReadOnly="True"
                           BorderThickness="0"
-                          GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#F0F0F0"
-                          RowBackground="White"
-                          AlternatingRowBackground="#FAFBFC"
+                          Background="#171C28"
+                          RowBackground="#171C28"
+                          AlternatingRowBackground="#171C28"
+                          Foreground="#F4F7FF"
+                          GridLinesVisibility="None"
+                          HeadersVisibility="Column"
                           SelectionMode="Single"
                           CanUserSortColumns="True"
-                          FontSize="13">
+                          FontSize="14">
 
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#F8F9FA"/>
-                            <Setter Property="Foreground" Value="#5A6370"/>
+                            <Setter Property="Background" Value="#202530"/>
+                            <Setter Property="Foreground" Value="#C9CDDC"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="12,10"/>
-                            <Setter Property="BorderBrush" Value="#E9ECEF"/>
+                            <Setter Property="FontSize" Value="14"/>
+                            <Setter Property="Padding" Value="20,16"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                            <Setter Property="BorderBrush" Value="#343B4D"/>
                             <Setter Property="BorderThickness" Value="0,0,0,1"/>
                         </Style>
                     </DataGrid.ColumnHeaderStyle>
 
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
+                            <Setter Property="MinHeight" Value="82"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="DataGridRow">
+                                        <Border Background="{TemplateBinding Background}"
+                                                BorderBrush="#282F3F"
+                                                BorderThickness="0,0,0,1">
+                                            <SelectiveScrollingGrid>
+                                                <SelectiveScrollingGrid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </SelectiveScrollingGrid.ColumnDefinitions>
+                                                <SelectiveScrollingGrid.RowDefinitions>
+                                                    <RowDefinition Height="*"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </SelectiveScrollingGrid.RowDefinitions>
+                                                <DataGridCellsPresenter Grid.Column="1"
+                                                                        ItemsPanel="{TemplateBinding ItemsPanel}"
+                                                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                                <DataGridDetailsPresenter Grid.Column="1"
+                                                                          Grid.Row="1"
+                                                                          Visibility="{TemplateBinding DetailsVisibility}"
+                                                                          SelectiveScrollingGrid.SelectiveScrollingOrientation="{Binding AreRowDetailsFrozen, ConverterParameter={x:Static SelectiveScrollingOrientation.Vertical}, Converter={x:Static DataGrid.RowDetailsScrollingConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                                <DataGridRowHeader Grid.RowSpan="2"
+                                                                   SelectiveScrollingGrid.SelectiveScrollingOrientation="Vertical"
+                                                                   Visibility="{Binding HeadersVisibility, ConverterParameter={x:Static DataGridHeadersVisibility.Row}, Converter={x:Static DataGrid.HeadersVisibilityConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                            </SelectiveScrollingGrid>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
                             <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#EBF5FB"/>
-                                </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#F5F8FA"/>
+                                    <Setter Property="Background" Value="#1E2534"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#242D42"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>
@@ -114,11 +370,14 @@
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
                             <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="#DDE3F1"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="DataGridCell">
-                                        <Border Padding="12,8" Background="{TemplateBinding Background}">
-                                            <ContentPresenter/>
+                                        <Border Padding="20,14" Background="{TemplateBinding Background}">
+                                            <ContentPresenter VerticalAlignment="Center"/>
                                         </Border>
                                     </ControlTemplate>
                                 </Setter.Value>
@@ -127,41 +386,81 @@
                     </DataGrid.CellStyle>
 
                     <DataGrid.Columns>
-
-                        <DataGridTextColumn Header="Data i godzina"
+                        <DataGridTextColumn Header="DATA I GODZINA"
                                             Binding="{Binding TimestampDisplay}"
-                                            Width="160"
-                                            CanUserSort="True"
+                                            Width="210"
                                             SortMemberPath="Timestamp"/>
 
-                        <DataGridTextColumn Header="Wykonał"
+                        <DataGridTextColumn Header="WYKONAŁ"
                                             Binding="{Binding ChangedBy}"
-                                            Width="180"/>
+                                            Width="240"/>
 
-                        <DataGridTemplateColumn Header="Akcja" Width="180" SortMemberPath="Action">
+                        <DataGridTemplateColumn Header="AKCJA" Width="240" SortMemberPath="Action">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Border CornerRadius="3" Padding="7,3" HorizontalAlignment="Left"
+                                    <Border CornerRadius="12"
+                                            Padding="11,4"
+                                            HorizontalAlignment="Left"
                                             Background="{Binding Action, Converter={StaticResource ActionToColorConverter}}">
                                         <TextBlock Text="{Binding Action}"
                                                    Foreground="White"
-                                                   FontWeight="SemiBold"
+                                                   FontWeight="Bold"
                                                    FontSize="11"/>
                                     </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="Szczegóły"
+                        <DataGridTextColumn Header="SZCZEGÓŁY"
                                             Binding="{Binding Details}"
-                                            Width="*"/>
+                                            Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                    <Setter Property="Foreground" Value="#DDE3F1"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+
+                <Border Grid.Row="1"
+                        Background="#202530"
+                        BorderBrush="#343B4D"
+                        BorderThickness="0,1,0,0"
+                        Padding="22,0">
+                    <TextBlock Text="{Binding FooterText}"
+                               Foreground="#C9CDDC"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                </Border>
+
+                <Grid Grid.RowSpan="2"
+                      Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
+                      Background="#AA0E131F"
+                      Panel.ZIndex="20">
+                    <Border Background="#171C28"
+                            BorderBrush="#343B4D"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="24,18"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconMaterial Kind="Loading"
+                                                        Width="20"
+                                                        Height="20"
+                                                        Foreground="#DDE7FF"
+                                                        Margin="0,0,10,0"/>
+                            <TextBlock Text="Ładowanie logów..."
+                                       Foreground="#DDE7FF"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Border>
-
-        <TextBlock Grid.Row="3"
-                   Text="{Binding FooterText}"
-                   FontSize="12" Foreground="#95A5A6" Margin="0,8,0,0"/>
     </Grid>
 </UserControl>

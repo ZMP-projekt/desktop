@@ -3,98 +3,105 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Logowanie"
         Icon="/Assets/logo.png"
-        Height="640"
-        Width="560"
-        MinHeight="600"
-        MinWidth="520"
+        Height="700"
+        Width="620"
+        MinHeight="640"
+        MinWidth="560"
         WindowStartupLocation="CenterScreen"
-        Background="#070D1A"
+        WindowState="Maximized"
+        Background="#0A0E1A"
         FontFamily="Segoe UI">
 
     <Window.Resources>
         <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#8D98AD"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#D7DCEF"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Margin" Value="14,0,0,7"/>
+            <Setter Property="Margin" Value="4,0,0,8"/>
         </Style>
 
         <Style x:Key="LoginTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Height" Value="50"/>
-            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Height" Value="54"/>
+            <Setter Property="Padding" Value="16,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#F3F7FF"/>
-            <Setter Property="CaretBrush" Value="#7DA8FF"/>
+            <Setter Property="Foreground" Value="#F3F6FF"/>
+            <Setter Property="CaretBrush" Value="#7EA2FF"/>
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="LoginPasswordBoxStyle" TargetType="PasswordBox">
-            <Setter Property="Height" Value="50"/>
-            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Height" Value="54"/>
+            <Setter Property="Padding" Value="16,0"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#F3F7FF"/>
-            <Setter Property="CaretBrush" Value="#7DA8FF"/>
+            <Setter Property="Foreground" Value="#F3F6FF"/>
+            <Setter Property="CaretBrush" Value="#7EA2FF"/>
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
         <Style x:Key="InputShellStyle" TargetType="Border">
-            <Setter Property="Height" Value="54"/>
-            <Setter Property="CornerRadius" Value="14"/>
-            <Setter Property="Background" Value="#192338"/>
-            <Setter Property="BorderBrush" Value="#263650"/>
+            <Setter Property="Height" Value="56"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="#090E19"/>
+            <Setter Property="BorderBrush" Value="#4A5267"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="15,0"/>
         </Style>
     </Window.Resources>
 
     <Grid ClipToBounds="True">
         <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                <GradientStop Color="#0E1830" Offset="0"/>
-                <GradientStop Color="#090F20" Offset="0.45"/>
-                <GradientStop Color="#070D1A" Offset="1"/>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#182643" Offset="0"/>
+                <GradientStop Color="#0B1020" Offset="0.42"/>
+                <GradientStop Color="#1D1034" Offset="1"/>
             </LinearGradientBrush>
         </Grid.Background>
 
-        <Ellipse Width="420" Height="420"
-                 HorizontalAlignment="Right"
-                 VerticalAlignment="Top"
-                 Margin="0,-170,-150,0"
-                 Opacity="0.95">
-            <Ellipse.Fill>
-                <RadialGradientBrush>
-                    <GradientStop Color="#438CFF" Offset="0"/>
-                    <GradientStop Color="#295CD8" Offset="0.42"/>
-                    <GradientStop Color="#001022" Offset="1"/>
-                </RadialGradientBrush>
-            </Ellipse.Fill>
-            <Ellipse.Effect>
-                <BlurEffect Radius="26"/>
-            </Ellipse.Effect>
-        </Ellipse>
+        <Border Height="1"
+                VerticalAlignment="Top"
+                Background="#273047"
+                Opacity="0.75"/>
 
-        <Ellipse Width="300" Height="300"
+        <Ellipse Width="860"
+                 Height="860"
                  HorizontalAlignment="Left"
-                 VerticalAlignment="Bottom"
-                 Margin="-150,0,0,-130"
-                 Opacity="0.45">
+                 VerticalAlignment="Top"
+                 Margin="-280,-360,0,0"
+                 Opacity="0.38">
             <Ellipse.Fill>
                 <RadialGradientBrush>
-                    <GradientStop Color="#825DFF" Offset="0"/>
-                    <GradientStop Color="#182849" Offset="0.55"/>
-                    <GradientStop Color="#070D1A" Offset="1"/>
+                    <GradientStop Color="#3E86FF" Offset="0"/>
+                    <GradientStop Color="#14264C" Offset="0.48"/>
+                    <GradientStop Color="#0B1020" Offset="1"/>
                 </RadialGradientBrush>
             </Ellipse.Fill>
             <Ellipse.Effect>
-                <BlurEffect Radius="34"/>
+                <BlurEffect Radius="42"/>
             </Ellipse.Effect>
         </Ellipse>
 
-        <Grid Margin="38,56,38,42">
+        <Ellipse Width="760"
+                 Height="760"
+                 HorizontalAlignment="Right"
+                 VerticalAlignment="Bottom"
+                 Margin="0,0,-260,-300"
+                 Opacity="0.44">
+            <Ellipse.Fill>
+                <RadialGradientBrush>
+                    <GradientStop Color="#6C3CFF" Offset="0"/>
+                    <GradientStop Color="#241242" Offset="0.52"/>
+                    <GradientStop Color="#0B1020" Offset="1"/>
+                </RadialGradientBrush>
+            </Ellipse.Fill>
+            <Ellipse.Effect>
+                <BlurEffect Radius="46"/>
+            </Ellipse.Effect>
+        </Ellipse>
+
+        <Grid Margin="36,86,36,46">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
@@ -102,171 +109,131 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="1"
-                    Width="500"
-                    MaxWidth="500"
+                    Width="430"
                     HorizontalAlignment="Center"
-                    Padding="36,32"
-                    CornerRadius="28"
-                    Background="#101A2D"
-                    BorderBrush="#243653"
+                    Padding="44,36"
+                    CornerRadius="12"
+                    Background="#171C28"
+                    BorderBrush="#353C50"
                     BorderThickness="1">
                 <Border.Effect>
-                    <DropShadowEffect Color="#020714"
-                                      BlurRadius="34"
-                                      ShadowDepth="12"
-                                      Opacity="0.42"/>
+                    <DropShadowEffect Color="#030711"
+                                      BlurRadius="44"
+                                      ShadowDepth="18"
+                                      Opacity="0.45"/>
                 </Border.Effect>
 
                 <StackPanel>
-                    <Grid Margin="0,0,0,38" HorizontalAlignment="Center">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Border Grid.Column="0"
-                                Width="66"
-                                Height="66"
-                                CornerRadius="19"
-                                Margin="0,0,18,0">
+                    <StackPanel HorizontalAlignment="Center"
+                                Margin="0,0,0,36">
+                        <Border Width="76"
+                                Height="76"
+                                CornerRadius="20"
+                                Margin="0,0,0,24">
                             <Border.Effect>
-                                <DropShadowEffect Color="#4B86FF"
-                                                  BlurRadius="24"
+                                <DropShadowEffect Color="#637EFF"
+                                                  BlurRadius="30"
                                                   ShadowDepth="0"
-                                                  Opacity="0.38"/>
+                                                  Opacity="0.35"/>
                             </Border.Effect>
                             <Image Source="/Assets/logo.png"
                                    Stretch="UniformToFill"
                                    RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Border>
 
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Gym Admin"
-                                       Foreground="#F7FAFF"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       TextAlignment="Left"/>
-                            <TextBlock Text="Panel administratora"
-                                       Foreground="#7F8CA4"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       TextAlignment="Left"
-                                       Margin="0,4,0,0"/>
-                        </StackPanel>
-                    </Grid>
+                        <TextBlock Text="Gym Admin"
+                                   Foreground="#F4F7FF"
+                                   FontSize="30"
+                                   FontWeight="Bold"
+                                   TextAlignment="Center"/>
+                        <TextBlock Text="Panel administratora"
+                                   Foreground="#A7AEC0"
+                                   FontSize="15"
+                                   FontWeight="SemiBold"
+                                   TextAlignment="Center"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
 
-                <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}"/>
-                <Border Style="{StaticResource InputShellStyle}" Margin="0,0,0,18">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="32"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Viewbox Grid.Column="0"
-                                 Width="20"
-                                 Height="20"
-                                 HorizontalAlignment="Left"
-                                 VerticalAlignment="Center">
-                            <Path Data="M3,5 L21,5 L21,19 L3,19 Z M3,7 L12,13 L21,7"
-                                  Stroke="#9BA8BD"
-                                  StrokeThickness="2"
-                                  StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"
-                                  StrokeLineJoin="Round"/>
-                        </Viewbox>
-                        <TextBox Grid.Column="1"
-                                 Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                    <TextBlock Text="Email" Style="{StaticResource FieldLabelStyle}"/>
+                    <Border Style="{StaticResource InputShellStyle}" Margin="0,0,0,22">
+                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource LoginTextBoxStyle}"/>
-                    </Grid>
-                </Border>
+                    </Border>
 
-                <TextBlock Text="Hasło" Style="{StaticResource FieldLabelStyle}"/>
-                <Border Style="{StaticResource InputShellStyle}"
-                        BorderBrush="#438CFF"
-                        BorderThickness="1.4"
-                        Margin="0,0,0,28">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="32"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Viewbox Grid.Column="0"
-                                 Width="20"
-                                 Height="20"
-                                 HorizontalAlignment="Left"
-                                 VerticalAlignment="Center">
-                            <Path Data="M7,10 L7,7 C7,4.2 9.2,2 12,2 C14.8,2 17,4.2 17,7 L17,10 M6,10 L18,10 C19.1,10 20,10.9 20,12 L20,20 C20,21.1 19.1,22 18,22 L6,22 C4.9,22 4,21.1 4,20 L4,12 C4,10.9 4.9,10 6,10 Z"
-                                  Stroke="#9BA8BD"
-                                  StrokeThickness="2"
-                                  StrokeStartLineCap="Round"
-                                  StrokeEndLineCap="Round"
-                                  StrokeLineJoin="Round"/>
-                        </Viewbox>
+                    <TextBlock Text="Hasło" Style="{StaticResource FieldLabelStyle}"/>
+                    <Border Style="{StaticResource InputShellStyle}"
+                            BorderBrush="#5A6380"
+                            Margin="0,0,0,30">
                         <PasswordBox x:Name="PasswordInput"
-                                     Grid.Column="1"
                                      PasswordChanged="PasswordInput_PasswordChanged"
                                      KeyDown="PasswordInput_KeyDown"
                                      Style="{StaticResource LoginPasswordBoxStyle}"/>
-                    </Grid>
-                </Border>
+                    </Border>
 
-                <Button Command="{Binding LoginCommand}"
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
-                        Height="54"
-                        Cursor="Hand"
-                        IsEnabled="{Binding IsLoginEnabled}"
-                        BorderThickness="0"
-                        Foreground="White"
-                        FontSize="16"
-                        FontWeight="Bold"
-                        Content="{Binding LoginButtonText}"
-                        Margin="0,0,0,18">
-                    <Button.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                            <GradientStop Color="#408CFF" Offset="0"/>
-                            <GradientStop Color="#9C5CFF" Offset="1"/>
-                        </LinearGradientBrush>
-                    </Button.Background>
-                    <Button.Effect>
-                        <DropShadowEffect Color="#4A7DFF"
-                                          BlurRadius="22"
-                                          ShadowDepth="0"
-                                          Opacity="0.35"/>
-                    </Button.Effect>
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    CornerRadius="15">
-                                <ContentPresenter HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Opacity" Value="0.92"/>
-                                </Trigger>
-                                <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Opacity" Value="0.8"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
+                    <Button Command="{Binding LoginCommand}"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            Height="58"
+                            Cursor="Hand"
+                            IsEnabled="{Binding IsLoginEnabled}"
+                            BorderThickness="0"
+                            Foreground="#101525"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Content="{Binding LoginButtonText}"
+                            Margin="0,0,0,20">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#6085FF" Offset="0"/>
+                                <GradientStop Color="#6234D4" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <Button.Effect>
+                            <DropShadowEffect Color="#5B63FF"
+                                              BlurRadius="26"
+                                              ShadowDepth="0"
+                                              Opacity="0.32"/>
+                        </Button.Effect>
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="8">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="0.94"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Opacity" Value="0.82"/>
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.48"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
 
-                <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="#FF7B8A"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           TextWrapping="Wrap"
-                           TextAlignment="Center"
-                           MinHeight="22"/>
+                    <TextBlock Text="{Binding ErrorMessage}"
+                               Foreground="#FF8795"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               MinHeight="24"/>
 
-                <TextBlock Text="Dostęp tylko dla administratorów"
-                           Foreground="#667389"
-                           FontSize="12"
-                           FontWeight="SemiBold"
-                           TextAlignment="Center"
-                           HorizontalAlignment="Center"
-                           Margin="0,20,0,0"/>
+                    <Border Height="1"
+                            Background="#2A3040"
+                            Opacity="0.8"
+                            Margin="0,20,0,24"/>
+
+                    <TextBlock Text="Dostęp tylko dla administratorów"
+                               Foreground="#8F96A9"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
         </Grid>
