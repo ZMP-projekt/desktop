@@ -30,6 +30,9 @@ public partial class NotificationsViewModel : ObservableObject
     private int _unreadCount;
 
     [ObservableProperty]
+    private bool _isOffline;
+
+    [ObservableProperty]
     private bool _isEmpty = true;
 
     private string _selectedFilter = "Wszystkie";

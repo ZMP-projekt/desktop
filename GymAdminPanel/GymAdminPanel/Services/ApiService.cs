@@ -20,7 +20,12 @@ public class ApiService
     public string Token { get; private set; } = string.Empty;
     public string LastLoginError { get; private set; } = string.Empty;
     public bool LastResultFromCache { get; private set; }
+    public bool IsOffline { get; private set; }
+    public DateTime? LastCacheUpdatedAt { get; private set; }
     public event Action<AppStatus>? StatusChanged;
+    public event Action<bool>? OfflineModeChanged;
+    public event Action<DateTime?>? CacheTimestampChanged;
+    public event Action<string>? SessionExpired;
 
     public ApiService()
         : this(new HttpClient { BaseAddress = new Uri("https://api-j6d6.onrender.com/") })
@@ -129,10 +134,14 @@ public class ApiService
                 var result = clients ?? new List<Client>();
                 await _cacheService.SaveAsync("clients", result);
                 LastResultFromCache = false;
+                SetOfflineMode(false);
                 return result;
             }
             else
             {
+                if (HandleAuthorizationFailure(response.StatusCode))
+                    return new List<Client>();
+
                 string errorDetails = await response.Content.ReadAsStringAsync();
                 return await LoadCachedListAsync<Client>(
                     "clients",
@@ -163,6 +172,50 @@ public class ApiService
             CanRetry = canRetry
         });
     }
+
+    private void SetOfflineMode(bool isOffline)
+    {
+        if (IsOffline == isOffline)
+            return;
+
+        IsOffline = isOffline;
+        OfflineModeChanged?.Invoke(IsOffline);
+    }
+
+    private void SetLastCacheUpdatedAt(DateTime? cachedAt)
+    {
+        LastCacheUpdatedAt = cachedAt;
+        CacheTimestampChanged?.Invoke(LastCacheUpdatedAt);
+    }
+
+    private bool BlockWriteWhenOffline()
+    {
+        if (!IsOffline)
+            return false;
+
+        PublishStatus(
+            AppStatusKind.Warning,
+            "Tryb offline: możesz przeglądać ostatnią lokalną kopię danych, ale zmiany wymagają połączenia z API.",
+            true);
+        return true;
+    }
+
+    private bool HandleAuthorizationFailure(HttpStatusCode statusCode)
+    {
+        if (statusCode is not (HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden))
+            return false;
+
+        var message = statusCode == HttpStatusCode.Unauthorized
+            ? "Sesja wygasła. Zaloguj się ponownie."
+            : "Brak uprawnień administratora. Zaloguj się na konto z odpowiednimi uprawnieniami.";
+
+        Logout();
+        SetOfflineMode(false);
+        PublishStatus(AppStatusKind.Error, message);
+        SessionExpired?.Invoke(message);
+        return true;
+    }
+
     public async Task<List<User>> GetUsersAsync()
     {
         if (string.IsNullOrEmpty(Token))
@@ -183,10 +236,14 @@ public class ApiService
                 var result = users ?? new List<User>();
                 await _cacheService.SaveAsync("users", result);
                 LastResultFromCache = false;
+                SetOfflineMode(false);
                 return result;
             }
             else
             {
+                if (HandleAuthorizationFailure(response.StatusCode))
+                    return new List<User>();
+
                 string errorDetails = await response.Content.ReadAsStringAsync();
                 return await LoadCachedListAsync<User>(
                     "users",
@@ -205,6 +262,7 @@ public class ApiService
     public async Task<bool> DeleteUserAsync(int userId)
     {
         if (string.IsNullOrEmpty(Token)) return false;
+        if (BlockWriteWhenOffline()) return false;
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
@@ -212,10 +270,14 @@ public class ApiService
         try
         {
             var response = await _httpClient.DeleteAsync($"api/admin/users/{userId}");
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return false;
+
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
+            SetOfflineMode(true);
             PublishStatus(AppStatusKind.Error, $"Błąd usuwania użytkownika: {ex.Message}", true);
             return false;
         }
@@ -227,6 +289,7 @@ public class ApiService
             PublishStatus(AppStatusKind.Error, "Brak tokenu. Zaloguj się ponownie.");
             return false;
         }
+        if (BlockWriteWhenOffline()) return false;
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
@@ -236,6 +299,9 @@ public class ApiService
             var roleParam = Uri.EscapeDataString(newRole);
             var response = await _httpClient.PatchAsync(
                 $"api/admin/users/{userId}/role?role={roleParam}", null);
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return false;
+
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
@@ -249,6 +315,7 @@ public class ApiService
         }
         catch (Exception ex)
         {
+            SetOfflineMode(true);
             PublishStatus(AppStatusKind.Error, $"Błąd zmiany roli: {ex.Message}", true);
             return false;
         }
@@ -275,10 +342,14 @@ public class ApiService
                 var result = classes ?? new List<GymClass>();
                 await _cacheService.SaveAsync(GetClassesCacheKey(date), result);
                 LastResultFromCache = false;
+                SetOfflineMode(false);
                 return result;
             }
             else
             {
+                if (HandleAuthorizationFailure(response.StatusCode))
+                    return new List<GymClass>();
+
                 string error = await response.Content.ReadAsStringAsync();
                 return await LoadCachedListAsync<GymClass>(
                     GetClassesCacheKey(date),
@@ -297,6 +368,7 @@ public class ApiService
     public async Task<bool> CreateClassAsync(CreateClassRequest request)
     {
         if (string.IsNullOrEmpty(Token)) return false;
+        if (BlockWriteWhenOffline()) return false;
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
@@ -304,6 +376,9 @@ public class ApiService
         try
         {
             var response = await _httpClient.PostAsJsonAsync("api/classes", request);
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return false;
+
             if (!response.IsSuccessStatusCode)
             {
                 string error = await response.Content.ReadAsStringAsync();
@@ -316,6 +391,7 @@ public class ApiService
         }
         catch (Exception ex)
         {
+            SetOfflineMode(true);
             PublishStatus(AppStatusKind.Error, $"Błąd połączenia podczas tworzenia zajęć: {ex.Message}", true);
             return false;
         }
@@ -323,6 +399,7 @@ public class ApiService
     public async Task<bool> DeleteClassAsync(int classId)
     {
         if (string.IsNullOrEmpty(Token)) return false;
+        if (BlockWriteWhenOffline()) return false;
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
@@ -330,10 +407,14 @@ public class ApiService
         try
         {
             var response = await _httpClient.DeleteAsync($"api/classes/{classId}");
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return false;
+
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
+            SetOfflineMode(true);
             PublishStatus(AppStatusKind.Error, $"Błąd usuwania zajęć: {ex.Message}", true);
             return false;
         }
@@ -348,6 +429,9 @@ public class ApiService
         try
         {
             var response = await _httpClient.GetAsync($"api/classes/{classId}/participants");
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return new List<Participant>();
+
             if (response.IsSuccessStatusCode)
             {
                 var participants = await response.Content.ReadFromJsonAsync<List<Participant>>();
@@ -376,8 +460,12 @@ public class ApiService
                 var result = locations ?? new List<Location>();
                 await _cacheService.SaveAsync("locations", result);
                 LastResultFromCache = false;
+                SetOfflineMode(false);
                 return result;
             }
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return new List<Location>();
+
             return await LoadCachedListAsync<Location>("locations", "Nie udało się pobrać lokalizacji.", "Tryb offline");
         }
         catch
@@ -401,8 +489,12 @@ public class ApiService
                 var result = trainers ?? new List<Trainer>();
                 await _cacheService.SaveAsync("trainers", result);
                 LastResultFromCache = false;
+                SetOfflineMode(false);
                 return result;
             }
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return new List<Trainer>();
+
             return await LoadCachedListAsync<Trainer>("trainers", "Nie udało się pobrać trenerów.", "Tryb offline");
         }
         catch
@@ -430,10 +522,14 @@ public class ApiService
                 var result = logs ?? new List<AuditLog>();
                 await _cacheService.SaveAsync("audit-logs", result);
                 LastResultFromCache = false;
+                SetOfflineMode(false);
                 return result;
             }
             else
             {
+                if (HandleAuthorizationFailure(response.StatusCode))
+                    return new List<AuditLog>();
+
                 string error = await response.Content.ReadAsStringAsync();
                 return await LoadCachedListAsync<AuditLog>(
                     "audit-logs",
@@ -465,8 +561,12 @@ public class ApiService
                 var result = notifications ?? new List<Notification>();
                 await _cacheService.SaveAsync("notifications", result);
                 LastResultFromCache = false;
+                SetOfflineMode(false);
                 return result;
             }
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return new List<Notification>();
+
             return await LoadCachedListAsync<Notification>("notifications", "Nie udało się pobrać powiadomień.", "Tryb offline");
         }
         catch (Exception ex)
@@ -480,6 +580,7 @@ public class ApiService
     public async Task<bool> MarkNotificationReadAsync(int id)
     {
         if (string.IsNullOrEmpty(Token)) return false;
+        if (BlockWriteWhenOffline()) return false;
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
@@ -488,13 +589,21 @@ public class ApiService
         {
             var response = await _httpClient.PatchAsync(
                 $"api/notifications/{id}/read", null);
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return false;
+
             return response.IsSuccessStatusCode;
         }
-        catch { return false; }
+        catch
+        {
+            SetOfflineMode(true);
+            return false;
+        }
     }
     public async Task<bool> DeleteNotificationAsync(int id)
     {
         if (string.IsNullOrEmpty(Token)) return false;
+        if (BlockWriteWhenOffline()) return false;
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
@@ -502,13 +611,21 @@ public class ApiService
         try
         {
             var response = await _httpClient.DeleteAsync($"api/notifications/{id}");
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return false;
+
             return response.IsSuccessStatusCode;
         }
-        catch { return false; }
+        catch
+        {
+            SetOfflineMode(true);
+            return false;
+        }
     }
     public async Task<bool> UpdateTrainerAsync(int trainerId, UpdateTrainerRequest request)
     {
         if (string.IsNullOrEmpty(Token)) return false;
+        if (BlockWriteWhenOffline()) return false;
 
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", Token);
@@ -517,6 +634,8 @@ public class ApiService
         {
             var response = await _httpClient.PutAsJsonAsync(
                 $"api/admin/trainers/{trainerId}", request);
+            if (HandleAuthorizationFailure(response.StatusCode))
+                return false;
 
             if (!response.IsSuccessStatusCode)
             {
@@ -531,6 +650,7 @@ public class ApiService
         }
         catch (Exception ex)
         {
+            SetOfflineMode(true);
             PublishStatus(AppStatusKind.Error, $"Błąd połączenia podczas aktualizacji trenera: {ex.Message}", true);
             return false;
         }
@@ -538,16 +658,14 @@ public class ApiService
 
     private async Task<List<T>> LoadCachedListAsync<T>(string cacheKey, string errorMessage, string title)
     {
-        var cached = await _cacheService.LoadAsync<T>(cacheKey);
-        LastResultFromCache = cached.Count > 0;
+        var cached = await _cacheService.LoadWithMetadataAsync<T>(cacheKey);
+        LastResultFromCache = cached.Items.Count > 0;
+        SetLastCacheUpdatedAt(cached.CachedAt);
+        SetOfflineMode(true);
 
-        if (cached.Count > 0)
+        if (cached.Items.Count > 0)
         {
-            PublishStatus(
-                AppStatusKind.Warning,
-                $"{errorMessage} Pokazuję ostatnią lokalną kopię danych.",
-                true);
-            return cached;
+            return cached.Items;
         }
 
         PublishStatus(AppStatusKind.Error, errorMessage, true);

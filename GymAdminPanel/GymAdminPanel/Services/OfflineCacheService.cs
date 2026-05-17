@@ -15,6 +15,8 @@ public class OfflineCacheService
         PropertyNameCaseInsensitive = true
     };
 
+    public sealed record CacheLoadResult<T>(List<T> Items, DateTime? CachedAt);
+
     public async Task SaveAsync<T>(string cacheKey, List<T> items)
     {
         await using var db = new AppDbContext();
@@ -43,20 +45,27 @@ public class OfflineCacheService
 
     public async Task<List<T>> LoadAsync<T>(string cacheKey)
     {
+        var result = await LoadWithMetadataAsync<T>(cacheKey);
+        return result.Items;
+    }
+
+    public async Task<CacheLoadResult<T>> LoadWithMetadataAsync<T>(string cacheKey)
+    {
         await using var db = new AppDbContext();
         await EnsureCacheTableAsync(db);
 
         var entry = await db.CacheEntries.FindAsync(cacheKey);
         if (entry == null || string.IsNullOrWhiteSpace(entry.PayloadJson))
-            return new List<T>();
+            return new CacheLoadResult<T>(new List<T>(), null);
 
         try
         {
-            return JsonSerializer.Deserialize<List<T>>(entry.PayloadJson, JsonOptions) ?? new List<T>();
+            var items = JsonSerializer.Deserialize<List<T>>(entry.PayloadJson, JsonOptions) ?? new List<T>();
+            return new CacheLoadResult<T>(items, entry.CachedAt);
         }
         catch
         {
-            return new List<T>();
+            return new CacheLoadResult<T>(new List<T>(), null);
         }
     }
 

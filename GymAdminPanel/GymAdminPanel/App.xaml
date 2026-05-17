@@ -6,6 +6,7 @@
              StartupUri="Views/LoginWindow.xaml">
     <Application.Resources>
         <converters:BoolToVisibilityConverter  x:Key="BoolToVisibilityConverter"/>
+        <converters:InverseBoolConverter       x:Key="InverseBoolConverter"/>
         <converters:RoleToColorConverter       x:Key="RoleToColorConverter"/>
         <converters:BoolToRedGreenConverter    x:Key="BoolToRedGreenConverter"/>
         <converters:BoolToTypeColorConverter   x:Key="BoolToTypeColorConverter"/>

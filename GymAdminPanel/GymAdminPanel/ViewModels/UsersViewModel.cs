@@ -30,6 +30,9 @@ public partial class UsersViewModel : ObservableObject
     [ObservableProperty]
     private string _footerText = "";
 
+    [ObservableProperty]
+    private bool _isOffline;
+
     private string _searchText = "";
     public string SearchText
     {

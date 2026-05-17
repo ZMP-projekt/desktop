@@ -369,6 +369,10 @@
                                                     Command="{Binding DataContext.OpenEditCommand,
                                                         RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
+                                                    IsEnabled="{Binding DataContext.IsOffline,
+                                                        RelativeSource={RelativeSource AncestorType=UserControl},
+                                                        Converter={StaticResource InverseBoolConverter}}"
+                                                    ToolTip="Niedostępne w trybie offline"
                                                     Style="{StaticResource GhostButtonStyle}"
                                                     HorizontalAlignment="Stretch">
                                                 <StackPanel Orientation="Horizontal">
@@ -433,6 +437,8 @@
                                  Margin="0,0,0,22"/>
 
                         <Button Command="{Binding SaveEditCommand}"
+                                IsEnabled="{Binding IsOffline, Converter={StaticResource InverseBoolConverter}}"
+                                ToolTip="Niedostępne w trybie offline"
                                 Style="{StaticResource PrimaryButtonStyle}"
                                 Margin="0,0,0,10">
                             <StackPanel Orientation="Horizontal">

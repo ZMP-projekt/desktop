@@ -1,0 +1,300 @@
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using GymAdminPanel.Models;
+using GymAdminPanel.Services;
+
+namespace GymAdminPanel.Tests.Services;
+
+public class ApiServiceOfflineAndEndpointTests
+{
+    [Fact]
+    public async Task ReadEndpoint_WhenApiFailsAndCacheExists_ReturnsCachedDataAndMarksOffline()
+    {
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
+            JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
+            JsonResponse(HttpStatusCode.OK, """[{"id":91,"name":"Cached Gym","city":"Warszawa","address":"Testowa 1"}]"""),
+            JsonResponse(HttpStatusCode.InternalServerError, """{"message":"Failure"}"""));
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var onlineResult = await service.GetLocationsAsync();
+        Assert.False(service.LastResultFromCache);
+        var cachedResult = await service.GetLocationsAsync();
+
+        Assert.Single(onlineResult);
+        Assert.Single(cachedResult);
+        Assert.Equal("Cached Gym", cachedResult[0].Name);
+        Assert.True(service.IsOffline);
+        Assert.True(service.LastResultFromCache);
+        Assert.NotNull(service.LastCacheUpdatedAt);
+    }
+
+    [Fact]
+    public async Task ReadEndpoint_WhenApiFailsAndCacheIsEmpty_ReturnsEmptyListAndPublishesError()
+    {
+        var dateWithoutCache = new DateTime(2098, 12, 30);
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
+            JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
+            JsonResponse(HttpStatusCode.InternalServerError, """{"message":"Failure"}"""));
+        var service = CreateService(handler);
+        AppStatus? status = null;
+        service.StatusChanged += value => status = value;
+        await LoginAsync(service);
+
+        var result = await service.GetClassesByDateAsync(dateWithoutCache);
+
+        Assert.Empty(result);
+        Assert.True(service.IsOffline);
+        Assert.False(service.LastResultFromCache);
+        Assert.NotNull(status);
+        Assert.Equal(AppStatusKind.Error, status.Kind);
+    }
+
+    [Fact]
+    public async Task ReadEndpoint_WhenApiRecoversAfterOffline_ReturnsOnlineStatus()
+    {
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
+            JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
+            JsonResponse(HttpStatusCode.OK, """[{"id":92,"name":"Recovery Gym","city":"Kraków","address":"Rynek 2"}]"""),
+            JsonResponse(HttpStatusCode.InternalServerError, """{"message":"Failure"}"""),
+            JsonResponse(HttpStatusCode.OK, """[{"id":93,"name":"Online Again","city":"Gdańsk","address":"Morska 3"}]"""));
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        await service.GetLocationsAsync();
+        await service.GetLocationsAsync();
+        var recovered = await service.GetLocationsAsync();
+
+        Assert.False(service.IsOffline);
+        Assert.False(service.LastResultFromCache);
+        Assert.Equal("Online Again", recovered[0].Name);
+    }
+
+    [Fact]
+    public async Task WriteEndpoint_WhenOffline_ReturnsFalseWithoutCallingApi()
+    {
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
+            JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
+            JsonResponse(HttpStatusCode.OK, """[{"id":94,"name":"Offline Gym","city":"Poznań","address":"Długa 4"}]"""),
+            JsonResponse(HttpStatusCode.InternalServerError, """{"message":"Failure"}"""));
+        var service = CreateService(handler);
+        await LoginAsync(service);
+        await service.GetLocationsAsync();
+        await service.GetLocationsAsync();
+        var requestsBeforeWrite = handler.Requests.Count;
+
+        var result = await service.DeleteNotificationAsync(500);
+
+        Assert.False(result);
+        Assert.True(service.IsOffline);
+        Assert.Equal(requestsBeforeWrite, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task GetClassesByDateAsync_SendsExpectedRequestAndParsesResponse()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """[{"id":7,"name":"Yoga","trainerName":"Anna","startTime":"2026-05-17T09:00:00Z","endTime":"2026-05-17T10:00:00Z","currentParticipants":4,"maxParticipants":12,"locationName":"Sala A","personalTraining":false}]""")
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var result = await service.GetClassesByDateAsync(new DateTime(2026, 5, 17));
+
+        Assert.Single(result);
+        Assert.Equal("Yoga", result[0].Name);
+        Assert.Equal("/api/classes/by-date", handler.Requests[2].RequestUri?.AbsolutePath);
+        Assert.Contains("date=", handler.Requests[2].RequestUri?.Query);
+    }
+
+    [Fact]
+    public async Task CreateAndDeleteClassAsync_SendExpectedRequests()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.Created, ""),
+                JsonResponse(HttpStatusCode.NoContent, "")
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var created = await service.CreateClassAsync(new CreateClassRequest
+        {
+            Name = "Pilates",
+            StartTime = DateTime.Today.AddHours(10),
+            EndTime = DateTime.Today.AddHours(11),
+            MaxParticipants = 10,
+            LocationId = 5
+        });
+        var deleted = await service.DeleteClassAsync(44);
+
+        Assert.True(created);
+        Assert.True(deleted);
+        Assert.Equal(HttpMethod.Post, handler.Requests[2].Method);
+        Assert.Equal("/api/classes", handler.Requests[2].RequestUri?.AbsolutePath);
+        Assert.Equal(HttpMethod.Delete, handler.Requests[3].Method);
+        Assert.Equal("/api/classes/44", handler.Requests[3].RequestUri?.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task TrainerEndpoints_ParseAndSendExpectedRequests()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """[{"id":11,"firstName":"Adam","lastName":"Trener","specialization":"Siła","bio":"Bio","photoUrl":"photo"}]"""),
+                JsonResponse(HttpStatusCode.OK, "")
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var trainers = await service.GetTrainersAsync();
+        var updated = await service.UpdateTrainerAsync(11, new UpdateTrainerRequest
+        {
+            FirstName = "Adam",
+            LastName = "Trener",
+            Specialization = "Mobility",
+            Bio = "Updated",
+            PhotoUrl = "photo2"
+        });
+
+        Assert.Single(trainers);
+        Assert.Equal("Adam", trainers[0].FirstName);
+        Assert.True(updated);
+        Assert.Equal("/api/trainers", handler.Requests[2].RequestUri?.AbsolutePath);
+        Assert.Equal(HttpMethod.Put, handler.Requests[3].Method);
+        Assert.Equal("/api/admin/trainers/11", handler.Requests[3].RequestUri?.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task NotificationEndpoints_ParseAndSendExpectedRequests()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """[{"id":8,"content":"Test","createdAt":"2026-05-17T10:00:00Z","read":false}]"""),
+                JsonResponse(HttpStatusCode.OK, ""),
+                JsonResponse(HttpStatusCode.NoContent, "")
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var notifications = await service.GetNotificationsAsync();
+        var marked = await service.MarkNotificationReadAsync(8);
+        var deleted = await service.DeleteNotificationAsync(8);
+
+        Assert.Single(notifications);
+        Assert.False(notifications[0].Read);
+        Assert.True(marked);
+        Assert.True(deleted);
+        Assert.Equal("/api/notifications", handler.Requests[2].RequestUri?.AbsolutePath);
+        Assert.Equal("/api/notifications/8/read", handler.Requests[3].RequestUri?.AbsolutePath);
+        Assert.Equal("/api/notifications/8", handler.Requests[4].RequestUri?.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task AuditLogsAndLocationsEndpoints_ParseResponses()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """[{"changedBy":"admin@test.pl","action":"CREATE","details":"Added","timestamp":"2026-05-17T10:00:00Z"}]"""),
+                JsonResponse(HttpStatusCode.OK, """[{"id":12,"name":"Main","city":"Łódź","address":"Centralna 1"}]""")
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var logs = await service.GetAuditLogsAsync();
+        var locations = await service.GetLocationsAsync();
+
+        Assert.Single(logs);
+        Assert.Equal("CREATE", logs[0].Action);
+        Assert.Single(locations);
+        Assert.Equal("Łódź", locations[0].City);
+        Assert.Equal("/api/admin/audit-logs", handler.Requests[2].RequestUri?.AbsolutePath);
+        Assert.Equal("/api/locations", handler.Requests[3].RequestUri?.AbsolutePath);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized, "Sesja wygasła. Zaloguj się ponownie.")]
+    [InlineData(HttpStatusCode.Forbidden, "Brak uprawnień administratora. Zaloguj się na konto z odpowiednimi uprawnieniami.")]
+    public async Task ReadEndpoints_WhenAuthorizationFails_RaiseSessionExpiredWithoutOffline(HttpStatusCode statusCode, string expectedMessage)
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(statusCode, """{"message":"Auth"}""")
+            }).ToArray());
+        var service = CreateService(handler);
+        var expiredMessage = string.Empty;
+        service.SessionExpired += message => expiredMessage = message;
+        await LoginAsync(service);
+
+        var result = await service.GetTrainersAsync();
+
+        Assert.Empty(result);
+        Assert.Empty(service.Token);
+        Assert.False(service.IsOffline);
+        Assert.Equal(expectedMessage, expiredMessage);
+    }
+
+    private static async Task LoginAsync(ApiService service)
+    {
+        var loggedIn = await service.LoginAsync("admin@test.pl", "secret");
+        Assert.True(loggedIn);
+    }
+
+    private static ApiService CreateService(HttpMessageHandler handler)
+    {
+        var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://example.test/")
+        };
+
+        return new ApiService(httpClient);
+    }
+
+    private static HttpResponseMessage[] LoginResponses() =>
+    [
+        JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
+        JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}""")
+    ];
+
+    private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json)
+        => new(statusCode)
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+
+    private sealed class QueueHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly Queue<HttpResponseMessage> _responses;
+
+        public QueueHttpMessageHandler(params HttpResponseMessage[] responses)
+        {
+            _responses = new Queue<HttpResponseMessage>(responses);
+        }
+
+        public List<HttpRequestMessage> Requests { get; } = new();
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            Requests.Add(request);
+
+            if (_responses.Count == 0)
+                throw new InvalidOperationException("No response configured for the request.");
+
+            return Task.FromResult(_responses.Dequeue());
+        }
+    }
+}

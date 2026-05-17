@@ -141,6 +141,8 @@
                         Orientation="Horizontal"
                         VerticalAlignment="Top">
                 <Button Command="{Binding MarkAllReadCommand}"
+                        IsEnabled="{Binding IsOffline, Converter={StaticResource InverseBoolConverter}}"
+                        ToolTip="Niedostępne w trybie offline"
                         Style="{StaticResource PrimaryActionButtonStyle}"
                         Margin="0,0,10,0">
                     <StackPanel Orientation="Horizontal">
@@ -155,8 +157,9 @@
                 </Button>
 
                 <Button Command="{Binding DeleteAllReadCommand}"
+                        IsEnabled="{Binding IsOffline, Converter={StaticResource InverseBoolConverter}}"
                         Style="{StaticResource IconButtonStyle}"
-                        ToolTip="Usuń przeczytane"
+                        ToolTip="Niedostępne w trybie offline"
                         Margin="0,0,8,0">
                     <iconPacks:PackIconMaterial Kind="TrashCanOutline"
                                                 Width="19"
@@ -340,7 +343,10 @@
                                         <Button ToolTip="Oznacz jako przeczytane"
                                                 Command="{Binding DataContext.MarkReadCommand,
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}">
+                                                CommandParameter="{Binding}"
+                                                IsEnabled="{Binding DataContext.IsOffline,
+                                                    RelativeSource={RelativeSource AncestorType=UserControl},
+                                                    Converter={StaticResource InverseBoolConverter}}">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
                                                     <Setter Property="Visibility" Value="Visible"/>
@@ -361,6 +367,9 @@
                                                 Command="{Binding DataContext.DeleteNotificationCommand,
                                                     RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}"
+                                                IsEnabled="{Binding DataContext.IsOffline,
+                                                    RelativeSource={RelativeSource AncestorType=UserControl},
+                                                    Converter={StaticResource InverseBoolConverter}}"
                                                 Style="{StaticResource IconButtonStyle}"
                                                 Margin="8,0,0,0">
                                             <iconPacks:PackIconMaterial Kind="TrashCanOutline"

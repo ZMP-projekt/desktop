@@ -75,6 +75,50 @@ public class ApiServiceAdminUserTests
         Assert.Empty(handler.Requests);
     }
 
+    [Fact]
+    public async Task GetUsersAsync_WhenSessionExpired_RaisesSessionExpiredAndDoesNotEnterOfflineMode()
+    {
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
+            JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
+            JsonResponse(HttpStatusCode.Unauthorized, """{"message":"Unauthorized"}"""));
+        var service = CreateService(handler);
+        await service.LoginAsync("admin@test.pl", "secret");
+        var expiredMessage = string.Empty;
+        service.SessionExpired += message => expiredMessage = message;
+
+        var result = await service.GetUsersAsync();
+
+        Assert.Empty(result);
+        Assert.Empty(service.Token);
+        Assert.False(service.IsOffline);
+        Assert.Equal("Sesja wygasła. Zaloguj się ponownie.", expiredMessage);
+        Assert.Equal(3, handler.Requests.Count);
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_WhenForbidden_RaisesSessionExpiredAndReturnsFalse()
+    {
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
+            JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
+            JsonResponse(HttpStatusCode.Forbidden, """{"message":"Forbidden"}"""));
+        var service = CreateService(handler);
+        await service.LoginAsync("admin@test.pl", "secret");
+        var expiredMessage = string.Empty;
+        service.SessionExpired += message => expiredMessage = message;
+
+        var result = await service.DeleteUserAsync(123);
+
+        Assert.False(result);
+        Assert.Empty(service.Token);
+        Assert.False(service.IsOffline);
+        Assert.Equal(
+            "Brak uprawnień administratora. Zaloguj się na konto z odpowiednimi uprawnieniami.",
+            expiredMessage);
+        Assert.Equal(3, handler.Requests.Count);
+    }
+
     private static ApiService CreateService(HttpMessageHandler handler)
     {
         var httpClient = new HttpClient(handler)

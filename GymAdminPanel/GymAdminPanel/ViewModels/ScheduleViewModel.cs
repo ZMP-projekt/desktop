@@ -37,6 +37,9 @@ public partial class ScheduleViewModel : ObservableObject
     private string _footerText = "";
 
     [ObservableProperty]
+    private bool _isOffline;
+
+    [ObservableProperty]
     private ObservableCollection<ScheduleDayOption> _weekDays = new();
 
     [ObservableProperty]

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using GymAdminPanel.Models;
 using GymAdminPanel.Services;
+using System.Linq;
 using System.Threading;
 using System.Windows;
 
@@ -11,6 +12,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
     private CancellationTokenSource? _statusAutoDismissCts;
+    private bool _isHandlingSessionExpired;
 
     [ObservableProperty]
     private object? _currentView;
@@ -39,6 +41,25 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _canRetryStatus;
 
+    [ObservableProperty]
+    private bool _isOffline;
+
+    [ObservableProperty]
+    private DateTime? _lastCacheUpdatedAt;
+
+    public string ConnectionStatusText
+    {
+        get
+        {
+            if (!IsOffline)
+                return "Online";
+
+            return LastCacheUpdatedAt.HasValue
+                ? $"Offline · dane z {LastCacheUpdatedAt.Value.ToLocalTime():dd.MM HH:mm}"
+                : "Offline";
+        }
+    }
+
     private readonly UsersViewModel _usersViewModel;
     private readonly DashboardViewModel _dashboardViewModel;
     private readonly ScheduleViewModel _scheduleViewModel;
@@ -64,8 +85,56 @@ public partial class MainViewModel : ObservableObject
         UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
 
         _apiService.StatusChanged += OnStatusChanged;
+        _apiService.OfflineModeChanged += OnOfflineModeChanged;
+        _apiService.CacheTimestampChanged += OnCacheTimestampChanged;
+        _apiService.SessionExpired += OnSessionExpired;
+        IsOffline = _apiService.IsOffline;
+        LastCacheUpdatedAt = _apiService.LastCacheUpdatedAt;
 
         ShowDashboard();
+    }
+
+    partial void OnIsOfflineChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ConnectionStatusText));
+        _usersViewModel.IsOffline = value;
+        _scheduleViewModel.IsOffline = value;
+        _trainersViewModel.IsOffline = value;
+        _notificationsViewModel.IsOffline = value;
+    }
+
+    partial void OnLastCacheUpdatedAtChanged(DateTime? value)
+    {
+        OnPropertyChanged(nameof(ConnectionStatusText));
+    }
+
+    private void OnOfflineModeChanged(bool isOffline)
+    {
+        Application.Current.Dispatcher.Invoke(() => IsOffline = isOffline);
+    }
+
+    private void OnCacheTimestampChanged(DateTime? cachedAt)
+    {
+        Application.Current.Dispatcher.Invoke(() => LastCacheUpdatedAt = cachedAt);
+    }
+
+    private void OnSessionExpired(string message)
+    {
+        Application.Current.Dispatcher.Invoke(() =>
+        {
+            if (_isHandlingSessionExpired)
+                return;
+
+            _isHandlingSessionExpired = true;
+
+            var loginWindow = new GymAdminPanel.Views.LoginWindow();
+            loginWindow.Show();
+
+            foreach (var window in Application.Current.Windows.OfType<GymAdminPanel.Views.MainWindow>().ToList())
+            {
+                window.Close();
+            }
+        });
     }
 
     private void OnStatusChanged(AppStatus status)

@@ -310,6 +310,9 @@
                                             <Button Command="{Binding DataContext.ChangeRoleCommand,
                                                 RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
+                                                    IsEnabled="{Binding DataContext.IsOffline,
+                                                        RelativeSource={RelativeSource AncestorType=UserControl},
+                                                        Converter={StaticResource InverseBoolConverter}}"
                                                     Style="{StaticResource ActionButtonStyle}"
                                                     Margin="0,0,8,0"
                                                     BorderBrush="#6B4B22"
@@ -322,6 +325,9 @@
                                             <Button Command="{Binding DataContext.DeleteUserCommand,
                                                 RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
+                                                    IsEnabled="{Binding DataContext.IsOffline,
+                                                        RelativeSource={RelativeSource AncestorType=UserControl},
+                                                        Converter={StaticResource InverseBoolConverter}}"
                                                     Style="{StaticResource ActionButtonStyle}"
                                                     BorderBrush="#653243"
                                                     ToolTip="Usuń użytkownika">

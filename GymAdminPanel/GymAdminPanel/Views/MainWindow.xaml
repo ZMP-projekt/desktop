@@ -313,20 +313,53 @@
                     BorderBrush="#1C2331"
                     BorderThickness="0,0,0,1">
                 <Grid Margin="28,0">
-                    <Button Command="{Binding RefreshCurrentSectionCommand}"
-                            Style="{StaticResource TopbarActionButtonStyle}"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <iconPacks:PackIconMaterial Kind="Refresh"
-                                                        Width="18"
-                                                        Height="18"
-                                                        Margin="0,0,10,0"
-                                                        VerticalAlignment="Center"/>
-                            <TextBlock Text="Odśwież"
-                                       VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+                        <Border Height="36"
+                                Padding="14,0"
+                                Margin="0,0,14,0"
+                                Background="#151B27"
+                                BorderBrush="#343B4D"
+                                BorderThickness="1"
+                                CornerRadius="18">
+                            <StackPanel Orientation="Horizontal"
+                                        VerticalAlignment="Center">
+                                <Ellipse Width="10"
+                                         Height="10"
+                                         Margin="0,0,8,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="#36D375"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsOffline}" Value="True">
+                                                    <Setter Property="Fill" Value="#E95A72"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock Text="{Binding ConnectionStatusText}"
+                                           Foreground="#DDE7FF"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Command="{Binding RefreshCurrentSectionCommand}"
+                                Style="{StaticResource TopbarActionButtonStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="Refresh"
+                                                            Width="18"
+                                                            Height="18"
+                                                            Margin="0,0,10,0"
+                                                            VerticalAlignment="Center"/>
+                                <TextBlock Text="Odśwież"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 
