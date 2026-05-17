@@ -24,4 +24,6 @@ public class Trainer
 
     public string FullName => $"{FirstName} {LastName}";
     public string DisplayName => $"{FirstName} {LastName}  ({Specialization})";
+
+    public override string ToString() => DisplayName;
 }
