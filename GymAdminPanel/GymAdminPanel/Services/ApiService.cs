@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Net;
 using System.Threading.Tasks;
 using GymAdminPanel.Models;
 
@@ -67,16 +68,38 @@ public class ApiService
                     return true;
                 }
             }
-            LastLoginError = "Błędny e-mail lub hasło!";
+            LastLoginError = GetLoginErrorMessage(response.StatusCode);
             return false;
         }
-        catch (Exception ex)
+        catch (HttpRequestException)
         {
             Logout();
-            LastLoginError = $"Błąd logowania: {ex.Message}";
+            LastLoginError = "Nie można połączyć się z serwerem. Sprawdź internet i spróbuj ponownie.";
+            return false;
+        }
+        catch (TaskCanceledException)
+        {
+            Logout();
+            LastLoginError = "Serwer nie odpowiedział na czas. Spróbuj ponownie za chwilę.";
+            return false;
+        }
+        catch (Exception)
+        {
+            Logout();
+            LastLoginError = "Wystąpił błąd logowania. Spróbuj ponownie za chwilę.";
             return false;
         }
     }
+
+    private static string GetLoginErrorMessage(HttpStatusCode statusCode) => statusCode switch
+    {
+        HttpStatusCode.Unauthorized => "Nieprawidłowy e-mail lub hasło.",
+        HttpStatusCode.Forbidden => "Brak dostępu. Panel administracyjny jest dostępny tylko dla administratorów.",
+        HttpStatusCode.BadRequest => "Sprawdź poprawność wpisanych danych.",
+        HttpStatusCode.TooManyRequests => "Za dużo prób logowania. Spróbuj ponownie za chwilę.",
+        >= HttpStatusCode.InternalServerError => "Serwer logowania ma chwilowy problem. Spróbuj ponownie później.",
+        _ => "Nie udało się zalogować. Sprawdź dane i spróbuj ponownie."
+    };
 
     private async Task<User?> GetCurrentUserAsync()
     {

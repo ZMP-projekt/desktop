@@ -72,9 +72,25 @@ public class ApiServiceLoginTests
 
         Assert.False(result);
         Assert.Empty(service.Token);
-        Assert.Equal("Błędny e-mail lub hasło!", service.LastLoginError);
+        Assert.Equal("Nieprawidłowy e-mail lub hasło.", service.LastLoginError);
         Assert.Single(handler.Requests);
         Assert.Equal("/auth/login", handler.Requests[0].RequestUri?.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WhenServerFails_ReturnsFriendlyMessage()
+    {
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.InternalServerError, """{"message":"Failure"}"""));
+        var service = CreateService(handler);
+
+        var result = await service.LoginAsync("admin@test.pl", "secret");
+
+        Assert.False(result);
+        Assert.Empty(service.Token);
+        Assert.Equal(
+            "Serwer logowania ma chwilowy problem. Spróbuj ponownie później.",
+            service.LastLoginError);
     }
 
     private static ApiService CreateService(HttpMessageHandler handler)

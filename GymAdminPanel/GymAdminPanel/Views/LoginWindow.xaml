@@ -205,6 +205,7 @@
                         <PasswordBox x:Name="PasswordInput"
                                      Grid.Column="1"
                                      PasswordChanged="PasswordInput_PasswordChanged"
+                                     KeyDown="PasswordInput_KeyDown"
                                      Style="{StaticResource LoginPasswordBoxStyle}"/>
                     </Grid>
                 </Border>
@@ -213,11 +214,12 @@
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                         Height="54"
                         Cursor="Hand"
+                        IsEnabled="{Binding IsLoginEnabled}"
                         BorderThickness="0"
                         Foreground="White"
                         FontSize="16"
                         FontWeight="Bold"
-                        Content="Zaloguj się"
+                        Content="{Binding LoginButtonText}"
                         Margin="0,0,0,18">
                     <Button.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">

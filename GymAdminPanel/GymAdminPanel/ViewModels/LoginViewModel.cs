@@ -4,6 +4,7 @@ using GymAdminPanel.Services;
 using GymAdminPanel.Views;
 using System.Windows;
 using System.Threading.Tasks;
+using System;
 
 namespace GymAdminPanel.ViewModels;
 
@@ -20,29 +21,91 @@ public partial class LoginViewModel : ObservableObject
     [ObservableProperty]
     private string _errorMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool _isLoggingIn;
+
+    public bool IsLoginEnabled =>
+        !IsLoggingIn &&
+        !string.IsNullOrWhiteSpace(Email) &&
+        !string.IsNullOrWhiteSpace(Password);
+
+    public string LoginButtonText => IsLoggingIn ? "Logowanie..." : "Zaloguj się";
+
     public LoginViewModel()
+        : this(new ApiService())
     {
-        _apiService = new ApiService();
+    }
+
+    public LoginViewModel(ApiService apiService)
+    {
+        _apiService = apiService;
     }
 
     [RelayCommand]
     private async Task LoginAsync(Window currentWindow)
     {
         ErrorMessage = string.Empty;
-        bool success = await _apiService.LoginAsync(Email, Password);
 
-        if (success)
+        if (IsLoggingIn)
+            return;
+
+        if (string.IsNullOrWhiteSpace(Email))
         {
-            var mainWindow = new MainWindow();
-            mainWindow.DataContext = new MainViewModel(_apiService);
-            mainWindow.Show();
-            currentWindow.Close();
+            ErrorMessage = "Podaj adres e-mail.";
+            return;
         }
-        else
+
+        if (string.IsNullOrWhiteSpace(Password))
         {
-            ErrorMessage = string.IsNullOrWhiteSpace(_apiService.LastLoginError)
-                ? "Błędny e-mail lub hasło!"
-                : _apiService.LastLoginError;
+            ErrorMessage = "Podaj hasło.";
+            return;
         }
+
+        IsLoggingIn = true;
+
+        try
+        {
+            bool success = await _apiService.LoginAsync(Email.Trim(), Password);
+
+            if (success)
+            {
+                var mainWindow = new MainWindow();
+                mainWindow.DataContext = new MainViewModel(_apiService);
+                mainWindow.Show();
+                currentWindow.Close();
+            }
+            else
+            {
+                ErrorMessage = string.IsNullOrWhiteSpace(_apiService.LastLoginError)
+                    ? "Nie udało się zalogować. Sprawdź dane i spróbuj ponownie."
+                    : _apiService.LastLoginError;
+            }
+        }
+        catch (Exception)
+        {
+            ErrorMessage = "Wystąpił nieoczekiwany błąd logowania. Spróbuj ponownie za chwilę.";
+        }
+        finally
+        {
+            IsLoggingIn = false;
+        }
+    }
+
+    partial void OnEmailChanged(string value)
+    {
+        ErrorMessage = string.Empty;
+        OnPropertyChanged(nameof(IsLoginEnabled));
+    }
+
+    partial void OnPasswordChanged(string value)
+    {
+        ErrorMessage = string.Empty;
+        OnPropertyChanged(nameof(IsLoginEnabled));
+    }
+
+    partial void OnIsLoggingInChanged(bool value)
+    {
+        OnPropertyChanged(nameof(IsLoginEnabled));
+        OnPropertyChanged(nameof(LoginButtonText));
     }
 }
