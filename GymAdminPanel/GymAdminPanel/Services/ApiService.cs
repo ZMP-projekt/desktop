@@ -132,9 +132,9 @@ public class ApiService
             {
                 var clients = await response.Content.ReadFromJsonAsync<List<Client>>();
                 var result = clients ?? new List<Client>();
-                await _cacheService.SaveAsync("clients", result);
                 LastResultFromCache = false;
                 SetOfflineMode(false);
+                await TrySaveCacheAsync("clients", result);
                 return result;
             }
             else
@@ -234,9 +234,9 @@ public class ApiService
             {
                 var users = await response.Content.ReadFromJsonAsync<List<User>>();
                 var result = users ?? new List<User>();
-                await _cacheService.SaveAsync("users", result);
                 LastResultFromCache = false;
                 SetOfflineMode(false);
+                await TrySaveCacheAsync("users", result);
                 return result;
             }
             else
@@ -340,9 +340,9 @@ public class ApiService
             {
                 var classes = await response.Content.ReadFromJsonAsync<List<GymClass>>();
                 var result = classes ?? new List<GymClass>();
-                await _cacheService.SaveAsync(GetClassesCacheKey(date), result);
                 LastResultFromCache = false;
                 SetOfflineMode(false);
+                await TrySaveCacheAsync(GetClassesCacheKey(date), result);
                 return result;
             }
             else
@@ -458,9 +458,9 @@ public class ApiService
             {
                 var locations = await response.Content.ReadFromJsonAsync<List<Location>>();
                 var result = locations ?? new List<Location>();
-                await _cacheService.SaveAsync("locations", result);
                 LastResultFromCache = false;
                 SetOfflineMode(false);
+                await TrySaveCacheAsync("locations", result);
                 return result;
             }
             if (HandleAuthorizationFailure(response.StatusCode))
@@ -487,9 +487,9 @@ public class ApiService
             {
                 var trainers = await response.Content.ReadFromJsonAsync<List<Trainer>>();
                 var result = trainers ?? new List<Trainer>();
-                await _cacheService.SaveAsync("trainers", result);
                 LastResultFromCache = false;
                 SetOfflineMode(false);
+                await TrySaveCacheAsync("trainers", result);
                 return result;
             }
             if (HandleAuthorizationFailure(response.StatusCode))
@@ -520,9 +520,9 @@ public class ApiService
             {
                 var logs = await response.Content.ReadFromJsonAsync<List<AuditLog>>();
                 var result = logs ?? new List<AuditLog>();
-                await _cacheService.SaveAsync("audit-logs", result);
                 LastResultFromCache = false;
                 SetOfflineMode(false);
+                await TrySaveCacheAsync("audit-logs", result);
                 return result;
             }
             else
@@ -559,9 +559,9 @@ public class ApiService
             {
                 var notifications = await response.Content.ReadFromJsonAsync<List<Notification>>();
                 var result = notifications ?? new List<Notification>();
-                await _cacheService.SaveAsync("notifications", result);
                 LastResultFromCache = false;
                 SetOfflineMode(false);
+                await TrySaveCacheAsync("notifications", result);
                 return result;
             }
             if (HandleAuthorizationFailure(response.StatusCode))
@@ -670,6 +670,18 @@ public class ApiService
 
         PublishStatus(AppStatusKind.Error, errorMessage, true);
         return new List<T>();
+    }
+
+    private async Task TrySaveCacheAsync<T>(string cacheKey, List<T> items)
+    {
+        try
+        {
+            await _cacheService.SaveAsync(cacheKey, items);
+        }
+        catch
+        {
+            SetLastCacheUpdatedAt(null);
+        }
     }
 
     private static string GetClassesCacheKey(DateTime date)
