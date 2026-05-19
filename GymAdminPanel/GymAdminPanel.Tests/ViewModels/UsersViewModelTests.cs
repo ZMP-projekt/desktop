@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using GymAdminPanel.Tests.Services;
 using GymAdminPanel.Services;
 using GymAdminPanel.ViewModels;
 
@@ -82,10 +83,7 @@ public class UsersViewModelTests
             JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
             JsonResponse(HttpStatusCode.OK, usersJson));
 
-        var service = new ApiService(new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://example.test/")
-        });
+        var service = ApiServiceTestFactory.Create(handler);
 
         var loggedIn = await service.LoginAsync("admin@test.pl", "secret");
         Assert.True(loggedIn);

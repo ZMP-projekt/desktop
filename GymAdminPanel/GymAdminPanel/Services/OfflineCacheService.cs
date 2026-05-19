@@ -10,6 +10,8 @@ namespace GymAdminPanel.Services;
 
 public class OfflineCacheService
 {
+    private readonly Func<AppDbContext> _createDbContext;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -17,9 +19,24 @@ public class OfflineCacheService
 
     public sealed record CacheLoadResult<T>(List<T> Items, DateTime? CachedAt);
 
+    public OfflineCacheService()
+        : this(() => new AppDbContext())
+    {
+    }
+
+    public OfflineCacheService(string databasePath)
+        : this(() => new AppDbContext(databasePath))
+    {
+    }
+
+    public OfflineCacheService(Func<AppDbContext> createDbContext)
+    {
+        _createDbContext = createDbContext;
+    }
+
     public async Task SaveAsync<T>(string cacheKey, List<T> items)
     {
-        await using var db = new AppDbContext();
+        await using var db = _createDbContext();
         await EnsureCacheTableAsync(db);
 
         var json = JsonSerializer.Serialize(items, JsonOptions);
@@ -51,7 +68,7 @@ public class OfflineCacheService
 
     public async Task<List<T>> LoadListsByKeyPrefixAsync<T>(string cacheKeyPrefix)
     {
-        await using var db = new AppDbContext();
+        await using var db = _createDbContext();
         await EnsureCacheTableAsync(db);
 
         var payloads = await db.CacheEntries
@@ -82,7 +99,7 @@ public class OfflineCacheService
 
     public async Task<CacheLoadResult<T>> LoadWithMetadataAsync<T>(string cacheKey)
     {
-        await using var db = new AppDbContext();
+        await using var db = _createDbContext();
         await EnsureCacheTableAsync(db);
 
         var entry = await db.CacheEntries.FindAsync(cacheKey);

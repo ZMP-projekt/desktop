@@ -75,27 +75,6 @@ public class ApiServiceOfflineAndEndpointTests
     }
 
     [Fact]
-    public async Task WriteEndpoint_WhenOffline_ReturnsFalseWithoutCallingApi()
-    {
-        var handler = new QueueHttpMessageHandler(
-            JsonResponse(HttpStatusCode.OK, """{"token":"admin-token"}"""),
-            JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
-            JsonResponse(HttpStatusCode.OK, """[{"id":94,"name":"Offline Gym","city":"Poznań","address":"Długa 4"}]"""),
-            JsonResponse(HttpStatusCode.InternalServerError, """{"message":"Failure"}"""));
-        var service = CreateService(handler);
-        await LoginAsync(service);
-        await service.GetLocationsAsync();
-        await service.GetLocationsAsync();
-        var requestsBeforeWrite = handler.Requests.Count;
-
-        var result = await service.DeleteNotificationAsync(500);
-
-        Assert.False(result);
-        Assert.True(service.IsOffline);
-        Assert.Equal(requestsBeforeWrite, handler.Requests.Count);
-    }
-
-    [Fact]
     public async Task GetClassesByDateAsync_SendsExpectedRequestAndParsesResponse()
     {
         var handler = new QueueHttpMessageHandler(
@@ -112,36 +91,6 @@ public class ApiServiceOfflineAndEndpointTests
         Assert.Equal("Yoga", result[0].Name);
         Assert.Equal("/api/classes/by-date", handler.Requests[2].RequestUri?.AbsolutePath);
         Assert.Contains("date=", handler.Requests[2].RequestUri?.Query);
-    }
-
-    [Fact]
-    public async Task CreateAndDeleteClassAsync_SendExpectedRequests()
-    {
-        var handler = new QueueHttpMessageHandler(
-            LoginResponses().Concat(new[]
-            {
-                JsonResponse(HttpStatusCode.Created, ""),
-                JsonResponse(HttpStatusCode.NoContent, "")
-            }).ToArray());
-        var service = CreateService(handler);
-        await LoginAsync(service);
-
-        var created = await service.CreateClassAsync(new CreateClassRequest
-        {
-            Name = "Pilates",
-            StartTime = DateTime.Today.AddHours(10),
-            EndTime = DateTime.Today.AddHours(11),
-            MaxParticipants = 10,
-            LocationId = 5
-        });
-        var deleted = await service.DeleteClassAsync(44);
-
-        Assert.True(created);
-        Assert.True(deleted);
-        Assert.Equal(HttpMethod.Post, handler.Requests[2].Method);
-        Assert.Equal("/api/classes", handler.Requests[2].RequestUri?.AbsolutePath);
-        Assert.Equal(HttpMethod.Delete, handler.Requests[3].Method);
-        Assert.Equal("/api/classes/44", handler.Requests[3].RequestUri?.AbsolutePath);
     }
 
     [Fact]
@@ -358,32 +307,6 @@ public class ApiServiceOfflineAndEndpointTests
     }
 
     [Fact]
-    public async Task NotificationEndpoints_ParseAndSendExpectedRequests()
-    {
-        var handler = new QueueHttpMessageHandler(
-            LoginResponses().Concat(new[]
-            {
-                JsonResponse(HttpStatusCode.OK, """[{"id":8,"content":"Test","createdAt":"2026-05-17T10:00:00Z","read":false}]"""),
-                JsonResponse(HttpStatusCode.OK, ""),
-                JsonResponse(HttpStatusCode.NoContent, "")
-            }).ToArray());
-        var service = CreateService(handler);
-        await LoginAsync(service);
-
-        var notifications = await service.GetNotificationsAsync();
-        var marked = await service.MarkNotificationReadAsync(8);
-        var deleted = await service.DeleteNotificationAsync(8);
-
-        Assert.Single(notifications);
-        Assert.False(notifications[0].Read);
-        Assert.True(marked);
-        Assert.True(deleted);
-        Assert.Equal("/api/notifications", handler.Requests[2].RequestUri?.AbsolutePath);
-        Assert.Equal("/api/notifications/8/read", handler.Requests[3].RequestUri?.AbsolutePath);
-        Assert.Equal("/api/notifications/8", handler.Requests[4].RequestUri?.AbsolutePath);
-    }
-
-    [Fact]
     public async Task AuditLogsAndLocationsEndpoints_ParseResponses()
     {
         var handler = new QueueHttpMessageHandler(
@@ -436,14 +359,7 @@ public class ApiServiceOfflineAndEndpointTests
     }
 
     private static ApiService CreateService(HttpMessageHandler handler)
-    {
-        var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://example.test/")
-        };
-
-        return new ApiService(httpClient);
-    }
+        => ApiServiceTestFactory.Create(handler);
 
     private static HttpResponseMessage[] LoginResponses() =>
     [

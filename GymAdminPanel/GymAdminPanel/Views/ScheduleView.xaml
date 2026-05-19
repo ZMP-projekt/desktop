@@ -1,4 +1,4 @@
-<UserControl x:Class="GymAdminPanel.Views.ScheduleView"
+﻿<UserControl x:Class="GymAdminPanel.Views.ScheduleView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
@@ -212,32 +212,6 @@
             </Setter>
         </Style>
 
-        <Style x:Key="TableIconButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Background" Value="#1D2535"/>
-            <Setter Property="BorderBrush" Value="#374156"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#283247"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Resources>
 
     <Grid Margin="30,30,30,24">
@@ -266,19 +240,6 @@
                            Margin="0,6,0,0"/>
             </StackPanel>
 
-            <Button Grid.Column="1"
-                    Visibility="Collapsed"
-                    Style="{StaticResource PrimaryButtonStyle}"
-                    VerticalAlignment="Top"
-                    HorizontalContentAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <iconPacks:PackIconMaterial Kind="Plus"
-                                                Width="20"
-                                                Height="20"
-                                                Margin="0,0,10,0"/>
-                    <TextBlock Text="Dodaj zajęcia" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
         </Grid>
 
         <Grid Grid.Row="1" Margin="0,0,0,24">
@@ -443,69 +404,7 @@
         </Border>
 
         <Grid Grid.Row="3">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <Border Grid.Row="0"
-                    Visibility="Collapsed"
-                    Style="{StaticResource PanelCardStyle}"
-                    Padding="24"
-                    Margin="0,0,0,20">
-                <StackPanel>
-                    <TextBlock Text="Nowe zajęcia" Foreground="#F4F7FF" FontSize="22" FontWeight="Bold" Margin="0,0,0,18"/>
-                    <UniformGrid Columns="4" Margin="0,0,0,14">
-                        <TextBox Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkInputStyle}" Margin="0,0,10,0"/>
-                        <TextBox Text="{Binding NewStartTime, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkInputStyle}" Margin="10,0"/>
-                        <TextBox Text="{Binding NewEndTime, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkInputStyle}" Margin="10,0"/>
-                        <TextBox Text="{Binding NewMaxParticipants, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkInputStyle}" Margin="10,0,0,0"/>
-                    </UniformGrid>
-                    <UniformGrid Columns="3" Margin="0,0,0,14">
-                        <ComboBox ItemsSource="{Binding Locations}"
-                                  SelectedItem="{Binding SelectedLocation}"
-                                  Style="{StaticResource DarkComboStyle}"
-                                  TextSearch.TextPath="DisplayName"
-                                  Margin="0,0,10,0">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayName}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <ComboBox ItemsSource="{Binding Trainers}"
-                                  SelectedItem="{Binding SelectedTrainer}"
-                                  IsEnabled="{Binding HasTrainers}"
-                                  Style="{StaticResource DarkComboStyle}"
-                                  TextSearch.TextPath="DisplayName"
-                                  Margin="10,0">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding DisplayName}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        <CheckBox Content="Trening osobisty" IsChecked="{Binding NewPersonalTraining}" Foreground="#DDE3F1" VerticalAlignment="Center" Margin="20,0,0,0"/>
-                    </UniformGrid>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox Text="{Binding NewDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkInputStyle}" Margin="0,0,12,0"/>
-                        <Button Grid.Column="1"
-                                Content="Zapisz"
-                                IsEnabled="{Binding IsOffline, Converter={StaticResource InverseBoolConverter}}"
-                                ToolTip="Niedostępne w trybie offline"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                Margin="0,0,10,0"/>
-                        <Button Grid.Column="2" Content="Anuluj" Style="{StaticResource GhostButtonStyle}"/>
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}" ClipToBounds="True">
+            <Border Style="{StaticResource PanelCardStyle}" ClipToBounds="True">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -569,9 +468,9 @@
                         </DataGrid.CellStyle>
 
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="GODZINA" Binding="{Binding TimeRange}" Width="140"/>
-                            <DataGridTextColumn Header="NAZWA ZAJĘĆ" Binding="{Binding Name}" Width="1.4*"/>
-                            <DataGridTextColumn Header="TRENER" Binding="{Binding TrainerName}" Width="180"/>
+                            <DataGridTextColumn Header="GODZINA" Binding="{Binding TimeRange}" Width="130"/>
+                            <DataGridTextColumn Header="NAZWA ZAJĘĆ" Binding="{Binding Name}" Width="1*"/>
+                            <DataGridTextColumn Header="TRENER" Binding="{Binding TrainerName}" Width="1.2*"/>
                             <DataGridTemplateColumn Header="UCZESTNICY" Width="130">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -582,7 +481,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="TYP" Width="160">
+                            <DataGridTemplateColumn Header="TYP" Width="145">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="12" Padding="10,4" HorizontalAlignment="Left"
@@ -592,32 +491,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="LOKALIZACJA" Binding="{Binding LocationName}" Width="190"/>
-                            <DataGridTemplateColumn Header="AKCJE" Width="130">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button Command="{Binding DataContext.ShowParticipantsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"
-                                                    IsEnabled="{Binding DataContext.IsOffline,
-                                                        RelativeSource={RelativeSource AncestorType=UserControl},
-                                                        Converter={StaticResource InverseBoolConverter}}"
-                                                    Style="{StaticResource TableIconButtonStyle}"
-                                                    ToolTip="Uczestnicy"
-                                                    Margin="0,0,8,0">
-                                                <iconPacks:PackIconMaterial Kind="AccountGroup" Width="19" Height="19" Foreground="#BFD0FF"/>
-                                            </Button>
-                                            <Button Command="{Binding DataContext.DeleteClassCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"
-                                                    Style="{StaticResource TableIconButtonStyle}"
-                                                    BorderBrush="#653243"
-                                                    ToolTip="Usuń zajęcia">
-                                                <iconPacks:PackIconMaterial Kind="TrashCanOutline" Width="19" Height="19" Foreground="#FF6E86"/>
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="LOKALIZACJA" Binding="{Binding LocationName}" Width="1.2*"/>
                         </DataGrid.Columns>
                     </DataGrid>
 

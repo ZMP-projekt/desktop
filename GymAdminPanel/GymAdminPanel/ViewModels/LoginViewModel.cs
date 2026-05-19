@@ -5,6 +5,7 @@ using GymAdminPanel.Views;
 using System.Windows;
 using System.Threading.Tasks;
 using System;
+using System.Net.Mail;
 
 namespace GymAdminPanel.ViewModels;
 
@@ -52,6 +53,12 @@ public partial class LoginViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(Email))
         {
             ErrorMessage = "Podaj adres e-mail.";
+            return;
+        }
+
+        if (!IsValidEmail(Email))
+        {
+            ErrorMessage = "Podaj poprawny adres e-mail.";
             return;
         }
 
@@ -107,5 +114,18 @@ public partial class LoginViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsLoginEnabled));
         OnPropertyChanged(nameof(LoginButtonText));
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        try
+        {
+            var address = new MailAddress(email.Trim());
+            return string.Equals(address.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

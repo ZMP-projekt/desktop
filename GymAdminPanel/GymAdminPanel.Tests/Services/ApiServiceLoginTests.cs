@@ -78,6 +78,22 @@ public class ApiServiceLoginTests
     }
 
     [Fact]
+    public async Task LoginAsync_WhenCredentialsAreRejectedWithForbidden_ReturnsInvalidCredentialsAndDoesNotCallCurrentUser()
+    {
+        var handler = new QueueHttpMessageHandler(
+            JsonResponse(HttpStatusCode.Forbidden, """{"message":"Forbidden"}"""));
+        var service = CreateService(handler);
+
+        var result = await service.LoginAsync("admin@test.pl", "wrong");
+
+        Assert.False(result);
+        Assert.Empty(service.Token);
+        Assert.Equal("Nieprawidłowy e-mail lub hasło.", service.LastLoginError);
+        Assert.Single(handler.Requests);
+        Assert.Equal("/auth/login", handler.Requests[0].RequestUri?.AbsolutePath);
+    }
+
+    [Fact]
     public async Task LoginAsync_WhenServerFails_ReturnsFriendlyMessage()
     {
         var handler = new QueueHttpMessageHandler(
@@ -94,14 +110,7 @@ public class ApiServiceLoginTests
     }
 
     private static ApiService CreateService(HttpMessageHandler handler)
-    {
-        var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://example.test/")
-        };
-
-        return new ApiService(httpClient);
-    }
+        => ApiServiceTestFactory.Create(handler);
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json)
         => new(statusCode)

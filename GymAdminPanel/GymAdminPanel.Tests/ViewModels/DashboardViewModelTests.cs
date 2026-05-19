@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using GymAdminPanel.Tests.Services;
 using GymAdminPanel.Services;
 using GymAdminPanel.ViewModels;
 
@@ -79,14 +80,7 @@ public class DashboardViewModelTests
     }
 
     private static ApiService CreateService(HttpMessageHandler handler)
-    {
-        var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://example.test/")
-        };
-
-        return new ApiService(httpClient);
-    }
+        => ApiServiceTestFactory.Create(handler);
 
     private static async Task WaitForAsync(Func<bool> condition)
     {

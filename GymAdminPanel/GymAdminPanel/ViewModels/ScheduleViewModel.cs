@@ -7,7 +7,6 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace GymAdminPanel.ViewModels;
 
@@ -241,65 +240,6 @@ public partial class ScheduleViewModel : ObservableObject
 
     [RelayCommand]
     private void SelectDate(DateTime date) => SelectedDate = date.Date;
-
-    [RelayCommand]
-    private async Task DeleteClassAsync(GymClass gymClass)
-    {
-        if (gymClass == null) return;
-
-        var confirm = MessageBox.Show(
-            $"Czy na pewno chcesz usunąć zajęcia?\n\n" +
-            $"Nazwa: {gymClass.Name}\n" +
-            $"Trener: {gymClass.TrainerName}\n" +
-            $"Godzina: {gymClass.TimeRange}",
-            "Potwierdzenie usunięcia",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (confirm != MessageBoxResult.Yes) return;
-
-        IsLoading = true;
-        var success = await _apiService.DeleteClassAsync(gymClass.Id);
-
-        if (success)
-        {
-            Classes.Remove(gymClass);
-            ApplyFilters();
-            StatusText = $"Zajęcia \"{gymClass.Name}\" zostały usunięte.";
-            _apiService.PublishStatus(AppStatusKind.Success, StatusText);
-        }
-        else
-        {
-            StatusText = "Nie udało się usunąć zajęć.";
-            _apiService.PublishStatus(AppStatusKind.Error, StatusText, true);
-        }
-        IsLoading = false;
-    }
-
-    [RelayCommand]
-    private async Task ShowParticipantsAsync(GymClass gymClass)
-    {
-        if (gymClass == null) return;
-
-        IsLoading = true;
-        var participants = await _apiService.GetClassParticipantsAsync(gymClass.Id);
-        IsLoading = false;
-
-        if (participants.Count == 0)
-        {
-            _apiService.PublishStatus(AppStatusKind.Info, $"Brak zapisanych uczestników na zajęcia: {gymClass.Name}.");
-            return;
-        }
-
-        var list = string.Join("\n", participants.Select((p, i) =>
-            $"{i + 1}. {p.FullName}  ({p.Email})"));
-
-        MessageBox.Show(
-            $"Uczestnicy zajęć: {gymClass.Name}\n\n{list}",
-            $"Uczestnicy ({participants.Count}/{gymClass.MaxParticipants})",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
-    }
 
     private static int GetMondayBasedDayOffset(DateTime date)
         => date.DayOfWeek == DayOfWeek.Sunday ? 6 : (int)date.DayOfWeek - 1;

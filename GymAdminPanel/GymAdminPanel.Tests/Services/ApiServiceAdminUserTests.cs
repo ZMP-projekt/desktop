@@ -120,14 +120,7 @@ public class ApiServiceAdminUserTests
     }
 
     private static ApiService CreateService(HttpMessageHandler handler)
-    {
-        var httpClient = new HttpClient(handler)
-        {
-            BaseAddress = new Uri("https://example.test/")
-        };
-
-        return new ApiService(httpClient);
-    }
+        => ApiServiceTestFactory.Create(handler);
 
     private static HttpResponseMessage JsonResponse(HttpStatusCode statusCode, string json)
         => new(statusCode)

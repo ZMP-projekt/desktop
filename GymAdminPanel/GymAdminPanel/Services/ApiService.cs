@@ -16,7 +16,7 @@ public class LoginResponse
 public class ApiService
 {
     private readonly HttpClient _httpClient;
-    private readonly OfflineCacheService _cacheService = new();
+    private readonly OfflineCacheService _cacheService;
     public string Token { get; private set; } = string.Empty;
     public string LastLoginError { get; private set; } = string.Empty;
     public bool LastResultFromCache { get; private set; }
@@ -33,8 +33,14 @@ public class ApiService
     }
 
     public ApiService(HttpClient httpClient)
+        : this(httpClient, new OfflineCacheService())
+    {
+    }
+
+    public ApiService(HttpClient httpClient, OfflineCacheService cacheService)
     {
         _httpClient = httpClient;
+        _cacheService = cacheService;
         _httpClient.BaseAddress ??= new Uri("https://api-j6d6.onrender.com/");
     }
     public async Task<bool> LoginAsync(string email, string password)
@@ -99,7 +105,7 @@ public class ApiService
     private static string GetLoginErrorMessage(HttpStatusCode statusCode) => statusCode switch
     {
         HttpStatusCode.Unauthorized => "Nieprawidłowy e-mail lub hasło.",
-        HttpStatusCode.Forbidden => "Brak dostępu. Panel administracyjny jest dostępny tylko dla administratorów.",
+        HttpStatusCode.Forbidden => "Nieprawidłowy e-mail lub hasło.",
         HttpStatusCode.BadRequest => "Sprawdź poprawność wpisanych danych.",
         HttpStatusCode.TooManyRequests => "Za dużo prób logowania. Spróbuj ponownie za chwilę.",
         >= HttpStatusCode.InternalServerError => "Serwer logowania ma chwilowy problem. Spróbuj ponownie później.",
@@ -115,47 +121,6 @@ public class ApiService
         }
 
         return await response.Content.ReadFromJsonAsync<User>();
-    }
-    public async Task<List<Client>> GetClientsAsync()
-    {
-        if (string.IsNullOrEmpty(Token))
-        {
-            PublishStatus(AppStatusKind.Error, "Brak tokenu. Zaloguj się ponownie.");
-            return new List<Client>();
-        }
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
-
-        try
-        {
-            var response = await _httpClient.GetAsync("api/admin/users");
-            if (response.IsSuccessStatusCode)
-            {
-                var clients = await response.Content.ReadFromJsonAsync<List<Client>>();
-                var result = clients ?? new List<Client>();
-                LastResultFromCache = false;
-                SetOfflineMode(false);
-                await TrySaveCacheAsync("clients", result);
-                return result;
-            }
-            else
-            {
-                if (HandleAuthorizationFailure(response.StatusCode))
-                    return new List<Client>();
-
-                string errorDetails = await response.Content.ReadAsStringAsync();
-                return await LoadCachedListAsync<Client>(
-                    "clients",
-                    $"Serwer odmówił wydania listy użytkowników!\nStatus: {response.StatusCode}\nSzczegóły: {errorDetails}",
-                    "Raport z API");
-            }
-        }
-        catch (Exception ex)
-        {
-                return await LoadCachedListAsync<Client>(
-                    "clients",
-                    $"Błąd połączenia: {ex.Message}",
-                    "Błąd krytyczny");
-        }
     }
     public void Logout()
     {
@@ -363,85 +328,6 @@ public class ApiService
                 GetClassesCacheKey(date),
                 $"Błąd połączenia: {ex.Message}",
                 "Błąd");
-        }
-    }
-    public async Task<bool> CreateClassAsync(CreateClassRequest request)
-    {
-        if (string.IsNullOrEmpty(Token)) return false;
-        if (BlockWriteWhenOffline()) return false;
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Token);
-
-        try
-        {
-            var response = await _httpClient.PostAsJsonAsync("api/classes", request);
-            if (HandleAuthorizationFailure(response.StatusCode))
-                return false;
-
-            if (!response.IsSuccessStatusCode)
-            {
-                string error = await response.Content.ReadAsStringAsync();
-                PublishStatus(
-                    AppStatusKind.Error,
-                    $"Nie udało się utworzyć zajęć. Status: {response.StatusCode}. {error}",
-                    true);
-            }
-            return response.IsSuccessStatusCode;
-        }
-        catch (Exception ex)
-        {
-            SetOfflineMode(true);
-            PublishStatus(AppStatusKind.Error, $"Błąd połączenia podczas tworzenia zajęć: {ex.Message}", true);
-            return false;
-        }
-    }
-    public async Task<bool> DeleteClassAsync(int classId)
-    {
-        if (string.IsNullOrEmpty(Token)) return false;
-        if (BlockWriteWhenOffline()) return false;
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Token);
-
-        try
-        {
-            var response = await _httpClient.DeleteAsync($"api/classes/{classId}");
-            if (HandleAuthorizationFailure(response.StatusCode))
-                return false;
-
-            return response.IsSuccessStatusCode;
-        }
-        catch (Exception ex)
-        {
-            SetOfflineMode(true);
-            PublishStatus(AppStatusKind.Error, $"Błąd usuwania zajęć: {ex.Message}", true);
-            return false;
-        }
-    }
-    public async Task<List<Participant>> GetClassParticipantsAsync(int classId)
-    {
-        if (string.IsNullOrEmpty(Token)) return new List<Participant>();
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Token);
-
-        try
-        {
-            var response = await _httpClient.GetAsync($"api/classes/{classId}/participants");
-            if (HandleAuthorizationFailure(response.StatusCode))
-                return new List<Participant>();
-
-            if (response.IsSuccessStatusCode)
-            {
-                var participants = await response.Content.ReadFromJsonAsync<List<Participant>>();
-                return participants ?? new List<Participant>();
-            }
-            return new List<Participant>();
-        }
-        catch
-        {
-            return new List<Participant>();
         }
     }
     public async Task<List<Location>> GetLocationsAsync()
@@ -697,83 +583,6 @@ public class ApiService
                 "audit-logs",
                 $"Błąd połączenia: {ex.Message}",
                 "Błąd");
-        }
-    }
-    public async Task<List<Notification>> GetNotificationsAsync()
-    {
-        if (string.IsNullOrEmpty(Token)) return new List<Notification>();
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Token);
-
-        try
-        {
-            var response = await _httpClient.GetAsync("api/notifications");
-            if (response.IsSuccessStatusCode)
-            {
-                var notifications = await response.Content.ReadFromJsonAsync<List<Notification>>();
-                var result = notifications ?? new List<Notification>();
-                LastResultFromCache = false;
-                SetOfflineMode(false);
-                await TrySaveCacheAsync("notifications", result);
-                return result;
-            }
-            if (HandleAuthorizationFailure(response.StatusCode))
-                return new List<Notification>();
-
-            return await LoadCachedListAsync<Notification>("notifications", "Nie udało się pobrać powiadomień.", "Tryb offline");
-        }
-        catch (Exception ex)
-        {
-            return await LoadCachedListAsync<Notification>(
-                "notifications",
-                $"Błąd pobierania powiadomień: {ex.Message}",
-                "Błąd");
-        }
-    }
-    public async Task<bool> MarkNotificationReadAsync(int id)
-    {
-        if (string.IsNullOrEmpty(Token)) return false;
-        if (BlockWriteWhenOffline()) return false;
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Token);
-
-        try
-        {
-            var response = await _httpClient.PatchAsync(
-                $"api/notifications/{id}/read", null);
-            if (HandleAuthorizationFailure(response.StatusCode))
-                return false;
-
-            return response.IsSuccessStatusCode;
-        }
-        catch
-        {
-            SetOfflineMode(true);
-            return false;
-        }
-    }
-    public async Task<bool> DeleteNotificationAsync(int id)
-    {
-        if (string.IsNullOrEmpty(Token)) return false;
-        if (BlockWriteWhenOffline()) return false;
-
-        _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", Token);
-
-        try
-        {
-            var response = await _httpClient.DeleteAsync($"api/notifications/{id}");
-            if (HandleAuthorizationFailure(response.StatusCode))
-                return false;
-
-            return response.IsSuccessStatusCode;
-        }
-        catch
-        {
-            SetOfflineMode(true);
-            return false;
         }
     }
     public async Task<bool> UpdateTrainerAsync(int trainerId, UpdateTrainerRequest request)
