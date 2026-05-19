@@ -267,7 +267,7 @@
             </StackPanel>
 
             <Button Grid.Column="1"
-                    Command="{Binding ToggleAddFormCommand}"
+                    Visibility="Collapsed"
                     Style="{StaticResource PrimaryButtonStyle}"
                     VerticalAlignment="Top"
                     HorizontalContentAlignment="Center">
@@ -449,7 +449,7 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Visibility="{Binding IsAddFormVisible, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Visibility="Collapsed"
                     Style="{StaticResource PanelCardStyle}"
                     Padding="24"
                     Margin="0,0,0,20">
@@ -496,12 +496,11 @@
                         <TextBox Text="{Binding NewDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource DarkInputStyle}" Margin="0,0,12,0"/>
                         <Button Grid.Column="1"
                                 Content="Zapisz"
-                                Command="{Binding SaveNewClassCommand}"
                                 IsEnabled="{Binding IsOffline, Converter={StaticResource InverseBoolConverter}}"
                                 ToolTip="Niedostępne w trybie offline"
                                 Style="{StaticResource PrimaryButtonStyle}"
                                 Margin="0,0,10,0"/>
-                        <Button Grid.Column="2" Content="Anuluj" Command="{Binding ToggleAddFormCommand}" Style="{StaticResource GhostButtonStyle}"/>
+                        <Button Grid.Column="2" Content="Anuluj" Style="{StaticResource GhostButtonStyle}"/>
                     </Grid>
                 </StackPanel>
             </Border>

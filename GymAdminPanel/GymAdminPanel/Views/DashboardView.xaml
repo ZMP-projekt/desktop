@@ -60,7 +60,7 @@
                     </StackPanel>
                 </Grid>
 
-                <UniformGrid Columns="4" Margin="0,0,0,24">
+                <UniformGrid Columns="3" Margin="0,0,0,24">
                     <Border Style="{StaticResource PanelCardStyle}" Padding="24" Margin="0,0,12,0">
                         <StackPanel>
                             <Border Style="{StaticResource IconTileStyle}">
@@ -78,16 +78,6 @@
                             </Border>
                             <TextBlock Text="Dzisiejsze zajęcia" Style="{StaticResource MetricLabelStyle}" Margin="0,20,0,0"/>
                             <TextBlock Text="{Binding TodayClassesCount}" Style="{StaticResource MetricValueStyle}"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource PanelCardStyle}" Padding="24" Margin="12,0,12,0">
-                        <StackPanel>
-                            <Border Style="{StaticResource IconTileStyle}" Background="#352833">
-                                <iconPacks:PackIconMaterial Kind="EmailOutline" Foreground="#FFAEA7" Style="{StaticResource MetricIconStyle}"/>
-                            </Border>
-                            <TextBlock Text="Nieprzeczytane" Style="{StaticResource MetricLabelStyle}" Margin="0,20,0,0"/>
-                            <TextBlock Text="{Binding UnreadNotificationsCount}" Style="{StaticResource MetricValueStyle}"/>
                         </StackPanel>
                     </Border>
 

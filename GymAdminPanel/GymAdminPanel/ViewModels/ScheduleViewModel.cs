@@ -117,52 +117,11 @@ public partial class ScheduleViewModel : ObservableObject
         }
     }
 
-    [ObservableProperty]
-    private bool _isAddFormVisible;
-
-    [ObservableProperty]
-    private string _newName = "";
-
-    [ObservableProperty]
-    private string _newDescription = "";
-
-    [ObservableProperty]
-    private DateTime _newStartDate = DateTime.Today;
-
-    [ObservableProperty]
-    private string _newStartTime = "09:00";
-
-    [ObservableProperty]
-    private string _newEndTime = "10:00";
-
-    [ObservableProperty]
-    private int _newMaxParticipants = 15;
-
-    [ObservableProperty]
-    private bool _newPersonalTraining;
-
-    [ObservableProperty]
-    private ObservableCollection<Location> _locations = new();
-
-    [ObservableProperty]
-    private Location? _selectedLocation;
-
-    [ObservableProperty]
-    private ObservableCollection<Trainer> _trainers = new();
-
-    [ObservableProperty]
-    private Trainer? _selectedTrainer;
-
-    [ObservableProperty]
-    private bool _hasTrainers;
-
     public ScheduleViewModel(ApiService apiService)
     {
         _apiService = apiService;
         RefreshWeekDays();
         _ = LoadClassesAsync();
-        _ = LoadLocationsAsync();
-        _ = LoadTrainersAsync();
     }
 
     partial void OnSelectedDateChanged(DateTime value)
@@ -271,23 +230,6 @@ public partial class ScheduleViewModel : ObservableObject
             }));
     }
 
-    private async Task LoadLocationsAsync()
-    {
-        var locs = await _apiService.GetLocationsAsync();
-        Locations = new ObservableCollection<Location>(locs);
-        if (Locations.Count > 0)
-            SelectedLocation = Locations[0];
-    }
-
-    private async Task LoadTrainersAsync()
-    {
-        var trainers = await _apiService.GetTrainersAsync();
-        Trainers = new ObservableCollection<Trainer>(trainers);
-        HasTrainers = Trainers.Count > 0;
-        if (HasTrainers)
-            SelectedTrainer = Trainers[0];
-    }
-
     [RelayCommand]
     private void PreviousDay() => SelectedDate = SelectedDate.AddDays(-1);
 
@@ -299,76 +241,6 @@ public partial class ScheduleViewModel : ObservableObject
 
     [RelayCommand]
     private void SelectDate(DateTime date) => SelectedDate = date.Date;
-
-    [RelayCommand]
-    private void ToggleAddForm()
-    {
-        IsAddFormVisible = !IsAddFormVisible;
-        if (IsAddFormVisible)
-        {
-            NewName = "";
-            NewDescription = "";
-            NewStartDate = SelectedDate;
-            NewStartTime = "09:00";
-            NewEndTime = "10:00";
-            NewMaxParticipants = 15;
-            NewPersonalTraining = false;
-            if (Locations.Count > 0) SelectedLocation = Locations[0];
-            if (Trainers.Count > 0) SelectedTrainer = Trainers[0];
-        }
-    }
-
-    [RelayCommand]
-    private async Task SaveNewClassAsync()
-    {
-        if (string.IsNullOrWhiteSpace(NewName))
-        {
-            _apiService.PublishStatus(AppStatusKind.Warning, "Podaj nazwę zajęć.");
-            return;
-        }
-        if (SelectedLocation == null)
-        {
-            _apiService.PublishStatus(AppStatusKind.Warning, "Wybierz lokalizację.");
-            return;
-        }
-        if (!TimeSpan.TryParse(NewStartTime, out var startTs) ||
-            !TimeSpan.TryParse(NewEndTime, out var endTs))
-        {
-            _apiService.PublishStatus(AppStatusKind.Warning, "Podaj godziny w formacie HH:mm, np. 09:00.");
-            return;
-        }
-        if (endTs <= startTs)
-        {
-            _apiService.PublishStatus(AppStatusKind.Warning, "Godzina zakończenia musi być późniejsza niż rozpoczęcia.");
-            return;
-        }
-
-        var request = new CreateClassRequest
-        {
-            Name = NewName,
-            Description = NewDescription,
-            StartTime = NewStartDate.Date + startTs,
-            EndTime = NewStartDate.Date + endTs,
-            MaxParticipants = NewMaxParticipants,
-            LocationId = SelectedLocation.Id,
-            PersonalTraining = NewPersonalTraining,
-        };
-
-        IsLoading = true;
-        var success = await _apiService.CreateClassAsync(request);
-        if (success)
-        {
-            IsAddFormVisible = false;
-            StatusText = $"Zajęcia \"{NewName}\" zostały dodane.";
-            _apiService.PublishStatus(AppStatusKind.Success, StatusText);
-            await LoadClassesAsync();
-        }
-        else
-        {
-            _apiService.PublishStatus(AppStatusKind.Error, "Nie udało się dodać zajęć.", true);
-        }
-        IsLoading = false;
-    }
 
     [RelayCommand]
     private async Task DeleteClassAsync(GymClass gymClass)

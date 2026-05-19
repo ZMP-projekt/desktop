@@ -27,9 +27,6 @@ public partial class MainViewModel : ObservableObject
     private string _currentSectionTitle = "Dashboard";
 
     [ObservableProperty]
-    private int _unreadNotificationsCount;
-
-    [ObservableProperty]
     private bool _isStatusVisible;
 
     [ObservableProperty]
@@ -64,7 +61,6 @@ public partial class MainViewModel : ObservableObject
     private readonly DashboardViewModel _dashboardViewModel;
     private readonly ScheduleViewModel _scheduleViewModel;
     private readonly AuditLogsViewModel _auditLogsViewModel;
-    private readonly NotificationsViewModel _notificationsViewModel;
     private readonly TrainersViewModel _trainersViewModel;
 
     public MainViewModel(ApiService apiService)
@@ -74,15 +70,7 @@ public partial class MainViewModel : ObservableObject
         _usersViewModel = new UsersViewModel(apiService);
         _scheduleViewModel = new ScheduleViewModel(apiService);
         _auditLogsViewModel = new AuditLogsViewModel(apiService);
-        _notificationsViewModel = new NotificationsViewModel(apiService);
         _trainersViewModel = new TrainersViewModel(apiService);
-
-        _notificationsViewModel.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(NotificationsViewModel.UnreadCount))
-                UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
-        };
-        UnreadNotificationsCount = _notificationsViewModel.UnreadCount;
 
         _apiService.StatusChanged += OnStatusChanged;
         _apiService.OfflineModeChanged += OnOfflineModeChanged;
@@ -100,7 +88,6 @@ public partial class MainViewModel : ObservableObject
         _usersViewModel.IsOffline = value;
         _scheduleViewModel.IsOffline = value;
         _trainersViewModel.IsOffline = value;
-        _notificationsViewModel.IsOffline = value;
     }
 
     partial void OnLastCacheUpdatedAtChanged(DateTime? value)
@@ -201,9 +188,6 @@ public partial class MainViewModel : ObservableObject
             case "auditlogs":
                 await _auditLogsViewModel.LoadLogsCommand.ExecuteAsync(null);
                 break;
-            case "notifications":
-                await _notificationsViewModel.LoadNotificationsCommand.ExecuteAsync(null);
-                break;
         }
     }
 
@@ -256,17 +240,6 @@ public partial class MainViewModel : ObservableObject
         var view = new GymAdminPanel.Views.AuditLogsView();
         view.DataContext = _auditLogsViewModel;
         CurrentView = view;
-    }
-
-    [RelayCommand]
-    private void ShowNotifications()
-    {
-        ActiveSection = "notifications";
-        CurrentSectionTitle = "Powiadomienia";
-        var view = new GymAdminPanel.Views.NotificationsView();
-        view.DataContext = _notificationsViewModel;
-        CurrentView = view;
-        _ = _notificationsViewModel.LoadNotificationsCommand.ExecuteAsync(null);
     }
 
     [RelayCommand]

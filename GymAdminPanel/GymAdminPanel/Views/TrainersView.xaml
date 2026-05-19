@@ -220,25 +220,7 @@
         </Border>
 
         <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition>
-                    <ColumnDefinition.Style>
-                        <Style TargetType="ColumnDefinition">
-                            <Setter Property="Width" Value="0"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsEditPanelVisible}" Value="True">
-                                    <Setter Property="Width" Value="360"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ColumnDefinition.Style>
-                </ColumnDefinition>
-            </Grid.ColumnDefinitions>
-
-            <Border Grid.Column="0"
-                    Style="{StaticResource PanelCardStyle}"
-                    Margin="0,0,12,0">
+            <Border Style="{StaticResource PanelCardStyle}">
                 <Grid>
                     <Grid Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}"
                           Background="#AA0E131F"
@@ -295,7 +277,6 @@
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="*"/>
-                                                <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
                                             <Border Grid.Row="0"
@@ -311,14 +292,8 @@
                                                            VerticalAlignment="Center"
                                                            Foreground="#DDE7FF"
                                                            FontSize="28"
-                                                           FontWeight="Bold">
-                                                    <TextBlock.Text>
-                                                        <MultiBinding StringFormat="{}{0}{1}">
-                                                            <Binding Path="FirstName[0]"/>
-                                                            <Binding Path="LastName[0]"/>
-                                                        </MultiBinding>
-                                                    </TextBlock.Text>
-                                                </TextBlock>
+                                                           FontWeight="Bold"
+                                                           Text="{Binding Initials}"/>
                                             </Border>
 
                                             <TextBlock Grid.Row="1"
@@ -329,14 +304,8 @@
                                                        TextAlignment="Center"
                                                        TextWrapping="Wrap"
                                                        LineHeight="28"
-                                                       Margin="0,0,0,10">
-                                                <TextBlock.Text>
-                                                    <MultiBinding StringFormat="{}{0} {1}">
-                                                        <Binding Path="FirstName"/>
-                                                        <Binding Path="LastName"/>
-                                                    </MultiBinding>
-                                                </TextBlock.Text>
-                                            </TextBlock>
+                                                       Margin="0,0,0,10"
+                                                       Text="{Binding NameOrEmail}"/>
 
                                             <Border Grid.Row="2"
                                                     CornerRadius="13"
@@ -363,27 +332,8 @@
                                                        MaxHeight="112"
                                                        TextTrimming="CharacterEllipsis"
                                                        VerticalAlignment="Top"
-                                                       Margin="2,0,2,22"/>
+                                                       Margin="2,0,2,0"/>
 
-                                            <Button Grid.Row="4"
-                                                    Command="{Binding DataContext.OpenEditCommand,
-                                                        RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"
-                                                    IsEnabled="{Binding DataContext.IsOffline,
-                                                        RelativeSource={RelativeSource AncestorType=UserControl},
-                                                        Converter={StaticResource InverseBoolConverter}}"
-                                                    ToolTip="Niedostępne w trybie offline"
-                                                    Style="{StaticResource GhostButtonStyle}"
-                                                    HorizontalAlignment="Stretch">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <iconPacks:PackIconMaterial Kind="Pencil"
-                                                                                Width="16"
-                                                                                Height="16"
-                                                                                Margin="0,0,8,0"/>
-                                                    <TextBlock Text="Edytuj profil"
-                                                               VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Button>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -393,79 +343,6 @@
                 </Grid>
             </Border>
 
-            <Border Grid.Column="1"
-                    Visibility="{Binding IsEditPanelVisible, Converter={StaticResource BoolToVisibilityConverter}}"
-                    Style="{StaticResource PanelCardStyle}"
-                    Padding="22">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="Edytuj profil trenera"
-                                   Foreground="#F4F7FF"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,20"/>
-
-                        <TextBlock Text="Imię *" FontSize="12" Foreground="#A8AFBF" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding EditFirstName, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource DarkTextBoxStyle}"
-                                 Margin="0,0,0,14"/>
-
-                        <TextBlock Text="Nazwisko *" FontSize="12" Foreground="#A8AFBF" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding EditLastName, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource DarkTextBoxStyle}"
-                                 Margin="0,0,0,14"/>
-
-                        <TextBlock Text="Specjalizacja" FontSize="12" Foreground="#A8AFBF" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding EditSpecialization, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource DarkTextBoxStyle}"
-                                 Margin="0,0,0,14"/>
-
-                        <TextBlock Text="Bio" FontSize="12" Foreground="#A8AFBF" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding EditBio, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource DarkTextBoxStyle}"
-                                 Height="112"
-                                 TextWrapping="Wrap"
-                                 AcceptsReturn="True"
-                                 VerticalScrollBarVisibility="Auto"
-                                 VerticalContentAlignment="Top"
-                                 Padding="14,10"
-                                 Margin="0,0,0,14"/>
-
-                        <TextBlock Text="URL zdjęcia" FontSize="12" Foreground="#A8AFBF" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                        <TextBox Text="{Binding EditPhotoUrl, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource DarkTextBoxStyle}"
-                                 Margin="0,0,0,22"/>
-
-                        <Button Command="{Binding SaveEditCommand}"
-                                IsEnabled="{Binding IsOffline, Converter={StaticResource InverseBoolConverter}}"
-                                ToolTip="Niedostępne w trybie offline"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                Margin="0,0,0,10">
-                            <StackPanel Orientation="Horizontal">
-                                <iconPacks:PackIconMaterial Kind="Check"
-                                                            Width="17"
-                                                            Height="17"
-                                                            Margin="0,0,8,0"/>
-                                <TextBlock Text="Zapisz zmiany"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-
-                        <Button Command="{Binding CancelEditCommand}"
-                                Style="{StaticResource GhostButtonStyle}"
-                                HorizontalAlignment="Stretch">
-                            <StackPanel Orientation="Horizontal">
-                                <iconPacks:PackIconMaterial Kind="Close"
-                                                            Width="16"
-                                                            Height="16"
-                                                            Margin="0,0,8,0"/>
-                                <TextBlock Text="Anuluj"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
         </Grid>
 
         <TextBlock Grid.Row="3"

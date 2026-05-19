@@ -502,6 +502,160 @@ public class ApiService
             return await LoadCachedListAsync<Trainer>("trainers", "Brak połączenia podczas pobierania trenerów.", "Tryb offline");
         }
     }
+
+    public async Task<List<Trainer>> GetRoleVerifiedTrainersAsync()
+    {
+        var trainers = await GetTrainersAsync();
+        var trainersFromCache = LastResultFromCache;
+
+        var users = await GetUsersAsync();
+        var usersFromCache = LastResultFromCache;
+        LastResultFromCache = trainersFromCache || usersFromCache;
+
+        if (users.Count == 0)
+            return new List<Trainer>();
+
+        var trainerUsers = users
+            .Where(IsTrainerRole)
+            .ToList();
+
+        var profileCandidates = GetProfileCandidates(
+            await LoadScheduledTrainerNameCountsAsync(),
+            trainers);
+
+        var usedProfileIdentities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var trainersWithProfiles = new List<Trainer>();
+        var usersWithoutProfiles = new List<User>();
+
+        foreach (var user in trainerUsers)
+        {
+            var profile = FindProfileForUser(user, trainers);
+            if (profile == null)
+            {
+                usersWithoutProfiles.Add(user);
+                continue;
+            }
+
+            usedProfileIdentities.Add(BuildProfileIdentity(profile));
+            trainersWithProfiles.Add(CreateTrainerFromUser(user, profile));
+        }
+
+        foreach (var user in usersWithoutProfiles)
+        {
+            var profile = profileCandidates
+                .FirstOrDefault(profile => !usedProfileIdentities.Contains(BuildProfileIdentity(profile)));
+
+            if (profile != null)
+                usedProfileIdentities.Add(BuildProfileIdentity(profile));
+
+            trainersWithProfiles.Add(CreateTrainerFromUser(user, profile));
+        }
+
+        return trainersWithProfiles
+            .OrderBy(trainer => trainer.FullName)
+            .ThenBy(trainer => trainer.Email)
+            .ToList();
+    }
+
+    private static bool IsTrainerRole(User user)
+        => string.Equals(user.Role, "ROLE_TRAINER", StringComparison.Ordinal) ||
+           string.Equals(user.Role, "TRAINER", StringComparison.Ordinal);
+
+    private static string BuildPersonKey(string? firstName, string? lastName)
+        => $"{firstName} {lastName}".Trim();
+
+    private static Trainer? FindProfileForUser(User user, List<Trainer> trainers)
+        => trainers.FirstOrDefault(trainer => MatchesTrainerUser(trainer, user)) ??
+           trainers.FirstOrDefault(trainer => EmailLocalPartMatchesName(user.Email, trainer));
+
+    private async Task<Dictionary<string, int>> LoadScheduledTrainerNameCountsAsync()
+    {
+        var cachedClasses = await _cacheService.LoadListsByKeyPrefixAsync<GymClass>("classes:");
+
+        return cachedClasses
+            .Select(gymClass => NormalizeLookupValue(gymClass.TrainerName))
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .GroupBy(name => name)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static List<Trainer> GetProfileCandidates(
+        Dictionary<string, int> scheduledTrainerNameCounts,
+        List<Trainer> trainers)
+    {
+        return trainers
+            .Where(HasProfileDisplayData)
+            .OrderByDescending(trainer => scheduledTrainerNameCounts
+                .GetValueOrDefault(NormalizeLookupValue(BuildPersonKey(trainer.FirstName, trainer.LastName))))
+            .ThenByDescending(trainer => HasUsefulProfileValue(trainer.Bio, "Brak opisu"))
+            .ThenByDescending(trainer => HasUsefulProfileValue(trainer.Specialization, "Do uzupełnienia"))
+            .ThenBy(trainer => trainer.FullName)
+            .ToList();
+    }
+
+    private static bool HasProfileDisplayData(Trainer trainer)
+        => !string.IsNullOrWhiteSpace(BuildPersonKey(trainer.FirstName, trainer.LastName));
+
+    private static bool HasUsefulProfileValue(string? value, string defaultValue)
+        => !string.IsNullOrWhiteSpace(value) &&
+           !string.Equals(value.Trim(), defaultValue, StringComparison.OrdinalIgnoreCase);
+
+    private static bool MatchesTrainerUser(Trainer trainer, User user)
+        => trainer.UserId == user.Id ||
+           (trainer.Id > 0 && trainer.Id == user.Id) ||
+           (!string.IsNullOrWhiteSpace(trainer.Email) &&
+            string.Equals(trainer.Email, user.Email, StringComparison.OrdinalIgnoreCase)) ||
+           (!string.IsNullOrWhiteSpace(BuildPersonKey(user.FirstName, user.LastName)) &&
+            string.Equals(
+                BuildPersonKey(trainer.FirstName, trainer.LastName),
+                BuildPersonKey(user.FirstName, user.LastName),
+                StringComparison.OrdinalIgnoreCase));
+
+    private static bool EmailLocalPartMatchesName(string? email, Trainer trainer)
+    {
+        var localPart = email?.Split('@')[0].Trim();
+        if (string.IsNullOrWhiteSpace(localPart))
+            return false;
+
+        return NamePartMatches(localPart, trainer.FirstName) ||
+               NamePartMatches(localPart, trainer.LastName);
+    }
+
+    private static bool NamePartMatches(string localPart, string? namePart)
+    {
+        if (string.IsNullOrWhiteSpace(namePart))
+            return false;
+
+        var normalizedLocalPart = NormalizeLookupValue(localPart);
+        var normalizedNamePart = NormalizeLookupValue(namePart);
+
+        return normalizedNamePart.Length >= 3 &&
+               normalizedLocalPart.Contains(normalizedNamePart, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeLookupValue(string value)
+        => new(value
+            .Where(char.IsLetterOrDigit)
+            .Select(char.ToLowerInvariant)
+            .ToArray());
+
+    private static string BuildProfileIdentity(Trainer trainer)
+        => NormalizeLookupValue(
+            $"{trainer.FirstName}|{trainer.LastName}|{trainer.Specialization}|{trainer.Bio}|{trainer.PhotoUrl}");
+
+    private static Trainer CreateTrainerFromUser(User user, Trainer? profile)
+        => new()
+        {
+            Id = profile?.Id > 0 ? profile.Id : user.Id,
+            UserId = user.Id,
+            Email = user.Email,
+            FirstName = !string.IsNullOrWhiteSpace(profile?.FirstName) ? profile.FirstName : user.FirstName,
+            LastName = !string.IsNullOrWhiteSpace(profile?.LastName) ? profile.LastName : user.LastName,
+            Specialization = !string.IsNullOrWhiteSpace(profile?.Specialization) ? profile.Specialization : "Do uzupełnienia",
+            Bio = !string.IsNullOrWhiteSpace(profile?.Bio) ? profile.Bio : "Brak opisu",
+            PhotoUrl = profile?.PhotoUrl ?? string.Empty
+        };
+
     public async Task<List<AuditLog>> GetAuditLogsAsync()
     {
         if (string.IsNullOrEmpty(Token))

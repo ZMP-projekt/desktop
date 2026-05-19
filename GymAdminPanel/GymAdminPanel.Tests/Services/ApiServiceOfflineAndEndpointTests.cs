@@ -175,6 +175,189 @@ public class ApiServiceOfflineAndEndpointTests
     }
 
     [Fact]
+    public async Task GetRoleVerifiedTrainersAsync_ReturnsOnlyUsersWithTrainerRole()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":11,"firstName":"Adam","lastName":"Trener","specialization":"Sila","bio":"Bio","photoUrl":"photo"},
+                  {"id":12,"firstName":"Ewa","lastName":"Byla","specialization":"Yoga","bio":"Bio","photoUrl":"photo"},
+                  {"id":13,"userId":21,"firstName":"Marta","lastName":"Aktywna","specialization":"Pilates","bio":"Bio","photoUrl":"photo"}
+                ]
+                """),
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":11,"email":"adam@test.pl","role":"ROLE_TRAINER","firstName":"Adam","lastName":"Trener"},
+                  {"id":12,"email":"ewa@test.pl","role":"ROLE_USER","firstName":"Ewa","lastName":"Byla"},
+                  {"id":21,"email":"marta@test.pl","role":"ROLE_TRAINER","firstName":"Marta","lastName":"Aktywna"}
+                ]
+                """)
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var trainers = await service.GetRoleVerifiedTrainersAsync();
+
+        Assert.Equal([11, 13], trainers.Select(trainer => trainer.Id));
+        Assert.Equal("/api/trainers", handler.Requests[2].RequestUri?.AbsolutePath);
+        Assert.Equal("/api/admin/users", handler.Requests[3].RequestUri?.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task GetRoleVerifiedTrainersAsync_WhenProfileIdDiffersFromUserId_ReturnsOnlyTrainerUsers()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":101,"firstName":"Adam","lastName":"Trener","specialization":"Sila","bio":"Bio","photoUrl":"photo"},
+                  {"id":102,"firstName":"Ewa","lastName":"Byla","specialization":"Yoga","bio":"Bio","photoUrl":"photo"}
+                ]
+                """),
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":11,"email":"adam@test.pl","role":"ROLE_TRAINER","firstName":"Adam","lastName":"Trener"},
+                  {"id":12,"email":"ewa@test.pl","role":"ROLE_USER","firstName":"Ewa","lastName":"Byla"}
+                ]
+                """)
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var trainers = await service.GetRoleVerifiedTrainersAsync();
+
+        var trainer = Assert.Single(trainers);
+        Assert.Equal(101, trainer.Id);
+        Assert.Equal("Adam", trainer.FirstName);
+        Assert.Equal("Trener", trainer.LastName);
+        Assert.Equal("Bio", trainer.Bio);
+    }
+
+    [Fact]
+    public async Task GetRoleVerifiedTrainersAsync_WhenProfileIsUnlinked_UsesRemainingProfileForBlankTrainerUser()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":0,"firstName":"Stary","lastName":"Profil","specialization":"Yoga","bio":"Bio","photoUrl":"photo"}
+                ]
+                """),
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":11,"email":"active.trainer@test.pl","role":"ROLE_TRAINER","firstName":"","lastName":""},
+                  {"id":12,"email":"regular.user@test.pl","role":"ROLE_USER","firstName":"","lastName":""}
+                ]
+                """)
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var trainers = await service.GetRoleVerifiedTrainersAsync();
+
+        var trainer = Assert.Single(trainers);
+        Assert.Equal(11, trainer.Id);
+        Assert.Equal("active.trainer@test.pl", trainer.Email);
+        Assert.Equal("Stary", trainer.FirstName);
+        Assert.Equal("Profil", trainer.LastName);
+        Assert.Equal("Bio", trainer.Bio);
+    }
+
+    [Fact]
+    public async Task GetRoleVerifiedTrainersAsync_WhenUserEmailMatchesProfileName_DoesNotAddDuplicateUserCard()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":0,"firstName":"Mikolaj","lastName":"Woloszyn","specialization":"Mobility","bio":"Opis profilu","photoUrl":"photo"}
+                ]
+                """),
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":19,"email":"mikolaj@email.pl","role":"ROLE_TRAINER","firstName":"","lastName":""}
+                ]
+                """)
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var trainers = await service.GetRoleVerifiedTrainersAsync();
+
+        var trainer = Assert.Single(trainers);
+        Assert.Equal(19, trainer.Id);
+        Assert.Equal(19, trainer.UserId);
+        Assert.Equal("Mikolaj", trainer.FirstName);
+        Assert.Equal("Woloszyn", trainer.LastName);
+        Assert.Equal("Opis profilu", trainer.Bio);
+    }
+
+    [Fact]
+    public async Task GetRoleVerifiedTrainersAsync_UsesScheduledTrainerNameToFillMissingProfileDetails()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":7,"name":"Boxing","trainerName":"Unique Coach","startTime":"2097-01-01T09:00:00Z","endTime":"2097-01-01T10:00:00Z","currentParticipants":1,"maxParticipants":10,"locationName":"Sala A","personalTraining":false}
+                ]
+                """),
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":0,"firstName":"Unique","lastName":"Coach","specialization":"Box","bio":"Opis z profilu","photoUrl":"photo"}
+                ]
+                """),
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":28,"email":"trainer2@example.com","role":"ROLE_TRAINER","firstName":"","lastName":""}
+                ]
+                """)
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+        await service.GetClassesByDateAsync(new DateTime(2097, 1, 1));
+
+        var trainers = await service.GetRoleVerifiedTrainersAsync();
+
+        var trainer = Assert.Single(trainers);
+        Assert.Equal(28, trainer.Id);
+        Assert.Equal(28, trainer.UserId);
+        Assert.Equal("trainer2@example.com", trainer.Email);
+        Assert.Equal("Unique", trainer.FirstName);
+        Assert.Equal("Coach", trainer.LastName);
+        Assert.Equal("Opis z profilu", trainer.Bio);
+    }
+
+    [Fact]
+    public async Task GetRoleVerifiedTrainersAsync_WhenNoProfilesExist_ReturnsTrainerUsers()
+    {
+        var handler = new QueueHttpMessageHandler(
+            LoginResponses().Concat(new[]
+            {
+                JsonResponse(HttpStatusCode.OK, "[]"),
+                JsonResponse(HttpStatusCode.OK, """
+                [
+                  {"id":11,"email":"active.trainer@test.pl","role":"ROLE_TRAINER","firstName":"","lastName":""}
+                ]
+                """)
+            }).ToArray());
+        var service = CreateService(handler);
+        await LoginAsync(service);
+
+        var trainers = await service.GetRoleVerifiedTrainersAsync();
+
+        var trainer = Assert.Single(trainers);
+        Assert.Equal(11, trainer.Id);
+        Assert.Equal("active.trainer@test.pl", trainer.Email);
+    }
+
+    [Fact]
     public async Task NotificationEndpoints_ParseAndSendExpectedRequests()
     {
         var handler = new QueueHttpMessageHandler(

@@ -229,35 +229,6 @@
                         </StackPanel>
                     </Button>
 
-                    <Button Command="{Binding ShowNotificationsCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource SidebarButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ActiveSection}" Value="notifications">
-                                        <Setter Property="Background" Value="#202636"/>
-                                        <Setter Property="Foreground" Value="#DDE7FF"/>
-                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                        <StackPanel Orientation="Horizontal">
-                            <iconPacks:PackIconMaterial Kind="BellOutline" Style="{StaticResource NavIconStyle}"/>
-                            <TextBlock Text="Powiadomienia" Style="{StaticResource NavLabelStyle}"/>
-                            <Border Margin="10,0,0,0"
-                                    Padding="6,1"
-                                    CornerRadius="8"
-                                    Background="#E95A72"
-                                    VerticalAlignment="Center"
-                                    Visibility="{Binding UnreadNotificationsCount,
-                                        Converter={StaticResource IntToVisibilityConverter}}">
-                                <TextBlock Text="{Binding UnreadNotificationsCount}"
-                                           Foreground="White"
-                                           FontSize="10"
-                                           FontWeight="Bold"/>
-                            </Border>
-                        </StackPanel>
-                    </Button>
                 </StackPanel>
 
                 <Border Grid.Row="2"

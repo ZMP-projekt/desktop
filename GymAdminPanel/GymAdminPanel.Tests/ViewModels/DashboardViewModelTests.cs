@@ -29,12 +29,6 @@ public class DashboardViewModelTests
             """),
             JsonResponse(HttpStatusCode.OK, """
             [
-              {"id":1,"content":"Unread","createdAt":"2026-05-17T10:00:00Z","read":false},
-              {"id":2,"content":"Read","createdAt":"2026-05-17T11:00:00Z","read":true}
-            ]
-            """),
-            JsonResponse(HttpStatusCode.OK, """
-            [
               {"changedBy":"admin@test.pl","action":"OLDER","details":"Older","timestamp":"2026-05-17T08:00:00Z"},
               {"changedBy":"admin@test.pl","action":"NEWER","details":"Newer","timestamp":"2026-05-17T12:00:00Z"}
             ]
@@ -48,7 +42,6 @@ public class DashboardViewModelTests
 
         Assert.Equal(3, viewModel.UsersCount);
         Assert.Equal(2, viewModel.TodayClassesCount);
-        Assert.Equal(1, viewModel.UnreadNotificationsCount);
         Assert.Equal(2, viewModel.AuditLogsCount);
         Assert.True(viewModel.HasTodayClasses);
         Assert.True(viewModel.HasRecentAuditLogs);
@@ -64,7 +57,6 @@ public class DashboardViewModelTests
             JsonResponse(HttpStatusCode.OK, """{"id":1,"email":"admin@test.pl","role":"ROLE_ADMIN"}"""),
             JsonResponse(HttpStatusCode.OK, "[]"),
             JsonResponse(HttpStatusCode.OK, "[]"),
-            JsonResponse(HttpStatusCode.OK, "[]"),
             JsonResponse(HttpStatusCode.OK, "[]"));
         var service = CreateService(handler);
         await LoginAsync(service);
@@ -75,7 +67,6 @@ public class DashboardViewModelTests
 
         Assert.Equal(0, viewModel.UsersCount);
         Assert.Equal(0, viewModel.TodayClassesCount);
-        Assert.Equal(0, viewModel.UnreadNotificationsCount);
         Assert.Equal(0, viewModel.AuditLogsCount);
         Assert.False(viewModel.HasTodayClasses);
         Assert.False(viewModel.HasRecentAuditLogs);

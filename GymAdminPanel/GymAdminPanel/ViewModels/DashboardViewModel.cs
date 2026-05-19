@@ -26,9 +26,6 @@ public partial class DashboardViewModel : ObservableObject
     private int _todayClassesCount;
 
     [ObservableProperty]
-    private int _unreadNotificationsCount;
-
-    [ObservableProperty]
     private int _auditLogsCount;
 
     [ObservableProperty]
@@ -59,15 +56,11 @@ public partial class DashboardViewModel : ObservableObject
         var classes = await _apiService.GetClassesByDateAsync(DateTime.Today);
         var classesFromCache = _apiService.LastResultFromCache;
 
-        var notifications = await _apiService.GetNotificationsAsync();
-        var notificationsFromCache = _apiService.LastResultFromCache;
-
         var auditLogs = await _apiService.GetAuditLogsAsync();
         var auditLogsFromCache = _apiService.LastResultFromCache;
 
         UsersCount = users.Count;
         TodayClassesCount = classes.Count;
-        UnreadNotificationsCount = notifications.Count(n => !n.Read);
         AuditLogsCount = auditLogs.Count;
 
         TodayClasses = new ObservableCollection<GymClass>(
@@ -76,7 +69,7 @@ public partial class DashboardViewModel : ObservableObject
         RecentAuditLogs = new ObservableCollection<AuditLog>(
             auditLogs.OrderByDescending(l => l.Timestamp).Take(5));
 
-        StatusText = usersFromCache || classesFromCache || notificationsFromCache || auditLogsFromCache
+        StatusText = usersFromCache || classesFromCache || auditLogsFromCache
             ? "Tryb offline: część danych pochodzi z lokalnej kopii"
             : $"Podsumowanie zaktualizowane: {DateTime.Now:HH:mm}";
 

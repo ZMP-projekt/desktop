@@ -49,6 +49,37 @@ public class OfflineCacheService
         return result.Items;
     }
 
+    public async Task<List<T>> LoadListsByKeyPrefixAsync<T>(string cacheKeyPrefix)
+    {
+        await using var db = new AppDbContext();
+        await EnsureCacheTableAsync(db);
+
+        var payloads = await db.CacheEntries
+            .Where(entry => entry.CacheKey.StartsWith(cacheKeyPrefix))
+            .Select(entry => entry.PayloadJson)
+            .ToListAsync();
+
+        var items = new List<T>();
+        foreach (var payload in payloads)
+        {
+            if (string.IsNullOrWhiteSpace(payload))
+                continue;
+
+            try
+            {
+                var cachedItems = JsonSerializer.Deserialize<List<T>>(payload, JsonOptions);
+                if (cachedItems != null)
+                    items.AddRange(cachedItems);
+            }
+            catch
+            {
+                // Ignore malformed cache entries and keep any usable cached lists.
+            }
+        }
+
+        return items;
+    }
+
     public async Task<CacheLoadResult<T>> LoadWithMetadataAsync<T>(string cacheKey)
     {
         await using var db = new AppDbContext();
