@@ -1,8 +1,8 @@
-# 🏋️‍♂️ Gym Management System - Desktop Admin Panel
+# 🏋️‍♂️ Gym Admin Panel - aplikacja desktopowa
 
 
 
-Aplikacja desktopowa służąca jako Panel Administratora w wieloplatformowym systemie zarządzania siłownią (ZMP-projekt). Aplikacja pozwala na kompleksowe zarządzanie klientami, pracownikami oraz zasobami siłowni.
+Desktopowy panel administracyjny systemu zarządzania siłownią, realizowany w ramach projektu ZMP.
 
 
 
@@ -12,30 +12,38 @@ Aplikacja desktopowa służąca jako Panel Administratora w wieloplatformowym sy
 
 * **Framework:** .NET 9.0 (WPF)
 
-* **Architektura:** Komunikacja z centralnym API (REST)
+* **Architektura:** MVVM (Communityoolkit.Mvvm)
+
+* **Komunikacja API:** REST - HttpClient, Bearer JWT
 
 * **Lokalna baza danych:** SQLite - tryb offline
 
   
 
-## 🚀 Główne funkcjonalności
+## 🚀 Funkcjonalności
 
-* **Bezpieczeństwo i autoryzacja:** Logowanie dla administratorów/managerów.
+* **Autoryzacja:**
+  
+  * Logowanie z weryfikacją roli administratora
+    
+  * Automatyczne wylogowanie po wygaśnięciu sesji
 
-* **Zarządzanie Użytkownikami (CRM):**
+* **Użytkownicy:**
 
-  * Przeglądanie, blokowanie i usuwanie kont klientów.
+  * Przeglądanie listy użytkowników
 
-  * Przeglądanie, blokowanie i usuwanie kont trenerów.
+  * Zmiana ról i usuwanie kont
 
-  * Mini-profile podglądowe (status aktywności, przypisane karnety).
+* **Harmonogram:**
 
-* **Zarządzanie Ofertą:**
+  * Przeglądanie zajęć
 
-  * Tworzenie i edycja harmonogramu zajęć.
+  * Filtrowanie po trenerze, lokalizacji
 
-  * Przydzielanie trenerów do konkretnych zajęć.
+* **Trenerzy:**
 
-* **Obsługa Siłowni:**
+  * Lista trenerów
+ 
+* **Logi:**
 
-  * Dodawanie i zarządzanie nowymi placówkami (siłowniami) w systemie.
+  * Historia zdarzeń systemowych z filtrowaniem
