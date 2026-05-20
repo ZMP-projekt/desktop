@@ -18,7 +18,7 @@ namespace GymAdminPanel.Views
         {
             if (DataContext is LoginViewModel viewModel && sender is PasswordBox passwordBox)
             {
-                viewModel.Password = passwordBox.Password;
+                viewModel.PasswordLength = passwordBox.SecurePassword.Length;
             }
         }
 
@@ -27,9 +27,9 @@ namespace GymAdminPanel.Views
             if (e.Key != Key.Enter || DataContext is not LoginViewModel viewModel)
                 return;
 
-            if (viewModel.LoginCommand.CanExecute(this))
+            if (viewModel.LoginCommand.CanExecute(PasswordInput))
             {
-                viewModel.LoginCommand.Execute(this);
+                viewModel.LoginCommand.Execute(PasswordInput);
                 e.Handled = true;
             }
         }

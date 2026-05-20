@@ -8,6 +8,20 @@ namespace GymAdminPanel.Tests.Services;
 public class ApiServiceLoginTests
 {
     [Fact]
+    public void Constructor_WhenBaseAddressUsesHttp_Throws()
+    {
+        var httpClient = new HttpClient(new QueueHttpMessageHandler())
+        {
+            BaseAddress = new Uri("http://example.test/")
+        };
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => ApiServiceTestFactory.Create(httpClient));
+
+        Assert.Equal("API base address must use HTTPS.", exception.Message);
+    }
+
+    [Fact]
     public async Task LoginAsync_WhenUserIsAdmin_ReturnsTrueAndKeepsToken()
     {
         var handler = new QueueHttpMessageHandler(

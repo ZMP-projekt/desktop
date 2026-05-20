@@ -43,6 +43,13 @@ public class ApiService
         _httpClient = httpClient;
         _cacheService = cacheService;
         _httpClient.BaseAddress ??= new Uri("https://api-j6d6.onrender.com/");
+        EnsureHttpsBaseAddress(_httpClient.BaseAddress);
+    }
+
+    private static void EnsureHttpsBaseAddress(Uri baseAddress)
+    {
+        if (!string.Equals(baseAddress.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("API base address must use HTTPS.");
     }
     public async Task<bool> LoginAsync(string email, string password)
     {

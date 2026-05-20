@@ -16,10 +16,10 @@ public class LoginViewModelTests
         var viewModel = new LoginViewModel(ApiServiceTestFactory.Create(handler))
         {
             Email = "ddddd",
-            Password = "secret"
+            PasswordLength = "secret".Length
         };
 
-        await viewModel.LoginCommand.ExecuteAsync(null);
+        await viewModel.LoginCommand.ExecuteAsync("secret");
 
         Assert.Equal("Podaj poprawny adres e-mail.", viewModel.ErrorMessage);
         Assert.Empty(handler.Requests);
@@ -34,13 +34,15 @@ public class LoginViewModelTests
         var viewModel = new LoginViewModel(ApiServiceTestFactory.Create(handler))
         {
             Email = "admin@test.pl",
-            Password = "wrong"
+            PasswordLength = "wrong".Length
         };
 
-        await viewModel.LoginCommand.ExecuteAsync(null);
+        await viewModel.LoginCommand.ExecuteAsync("wrong");
 
         Assert.Equal("Nieprawidłowy e-mail lub hasło.", viewModel.ErrorMessage);
         Assert.False(viewModel.IsLoggingIn);
+        Assert.True(viewModel.IsLoginEnabled);
+        Assert.Equal("wrong".Length, viewModel.PasswordLength);
         Assert.Single(handler.Requests);
         Assert.Equal("/auth/login", handler.Requests[0].RequestUri?.AbsolutePath);
     }
@@ -54,7 +56,7 @@ public class LoginViewModelTests
         };
 
         viewModel.Email = "admin@test.pl";
-        viewModel.Password = "secret";
+        viewModel.PasswordLength = "secret".Length;
 
         Assert.True(viewModel.IsLoginEnabled);
         Assert.Empty(viewModel.ErrorMessage);

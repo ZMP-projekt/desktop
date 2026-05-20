@@ -227,7 +227,7 @@
                     </Border>
 
                     <Button Command="{Binding LoginCommand}"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding ElementName=PasswordInput}"
                             Height="58"
                             Cursor="Hand"
                             IsEnabled="{Binding IsLoginEnabled}"
