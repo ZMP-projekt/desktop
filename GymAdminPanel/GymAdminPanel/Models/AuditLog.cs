@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using GymAdminPanel.Services;
 
 namespace GymAdminPanel.Models;
 
@@ -18,4 +19,6 @@ public class AuditLog
     public DateTime Timestamp { get; set; }
 
     public string TimestampDisplay => Timestamp.ToLocalTime().ToString("dd.MM.yyyy  HH:mm:ss");
+    public string ActionDisplay => LocalizationService.Instance.TranslateAuditAction(Action);
+    public string DetailsDisplay => LocalizationService.Instance.TranslateAuditDetails(Details);
 }

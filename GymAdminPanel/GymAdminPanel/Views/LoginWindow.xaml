@@ -1,7 +1,8 @@
 <Window x:Class="GymAdminPanel.Views.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Logowanie"
+        xmlns:services="clr-namespace:GymAdminPanel.Services"
+        Title="{Binding [Login.Title], Source={x:Static services:LocalizationService.Instance}}"
         Icon="/Assets/logo.png"
         Height="700"
         Width="620"
@@ -49,6 +50,38 @@
             <Setter Property="BorderBrush" Value="#4A5267"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
+
+        <Style x:Key="LanguageToggleButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#DDE7FF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="17">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#232B3E"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#111827"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid ClipToBounds="True">
@@ -64,6 +97,29 @@
                 VerticalAlignment="Top"
                 Background="#273047"
                 Opacity="0.75"/>
+
+        <Border HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,24,32,0"
+                Height="38"
+                Background="#171C28"
+                BorderBrush="#3D465B"
+                BorderThickness="1"
+                CornerRadius="19"
+                Panel.ZIndex="4"
+                ToolTip="{Binding [Topbar.LanguageTooltip], Source={x:Static services:LocalizationService.Instance}}">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="PL"
+                        Command="{Binding SwitchLanguageCommand}"
+                        CommandParameter="pl"
+                        Style="{StaticResource LanguageToggleButtonStyle}"/>
+                <Border Width="1" Height="18" Background="#3D465B"/>
+                <Button Content="EN"
+                        Command="{Binding SwitchLanguageCommand}"
+                        CommandParameter="en"
+                        Style="{StaticResource LanguageToggleButtonStyle}"/>
+            </StackPanel>
+        </Border>
 
         <Ellipse Width="860"
                  Height="860"
@@ -146,7 +202,7 @@
                                    FontSize="30"
                                    FontWeight="Bold"
                                    TextAlignment="Center"/>
-                        <TextBlock Text="Panel administratora"
+                        <TextBlock Text="{Binding [App.AdminPanelTitle], Source={x:Static services:LocalizationService.Instance}}"
                                    Foreground="#A7AEC0"
                                    FontSize="15"
                                    FontWeight="SemiBold"
@@ -160,7 +216,7 @@
                                  Style="{StaticResource LoginTextBoxStyle}"/>
                     </Border>
 
-                    <TextBlock Text="Hasło" Style="{StaticResource FieldLabelStyle}"/>
+                    <TextBlock Text="{Binding [Login.Password], Source={x:Static services:LocalizationService.Instance}}" Style="{StaticResource FieldLabelStyle}"/>
                     <Border Style="{StaticResource InputShellStyle}"
                             BorderBrush="#5A6380"
                             Margin="0,0,0,30">
@@ -228,7 +284,7 @@
                             Opacity="0.8"
                             Margin="0,20,0,24"/>
 
-                    <TextBlock Text="Dostęp tylko dla administratorów"
+                    <TextBlock Text="{Binding [App.AdminOnly], Source={x:Static services:LocalizationService.Instance}}"
                                Foreground="#8F96A9"
                                FontSize="12"
                                FontWeight="SemiBold"

@@ -11,7 +11,9 @@ namespace GymAdminPanel.ViewModels;
 public partial class TrainersViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private readonly LocalizationService _localization = LocalizationService.Instance;
     private List<Trainer> _allTrainers = new();
+    private bool _lastLoadFromCache;
 
     [ObservableProperty]
     private ObservableCollection<Trainer> _filteredTrainers = new();
@@ -42,6 +44,7 @@ public partial class TrainersViewModel : ObservableObject
     public TrainersViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        _localization.LanguageChanged += OnLanguageChanged;
         _ = LoadTrainersAsync();
     }
 
@@ -49,14 +52,13 @@ public partial class TrainersViewModel : ObservableObject
     private async Task LoadTrainersAsync()
     {
         IsLoading = true;
-        StatusText = "Pobieranie listy trenerów...";
+        StatusText = _localization.Translate("Trainers.Fetching");
 
         _allTrainers = await _apiService.GetRoleVerifiedTrainersAsync();
+        _lastLoadFromCache = _apiService.LastResultFromCache;
         ApplyFilter();
 
-        StatusText = _apiService.LastResultFromCache
-            ? $"Tryb offline: trenerzy ({_allTrainers.Count}) z lokalnej kopii"
-            : $"Trenerzy ({_allTrainers.Count})";
+        RefreshStatusText();
         IsLoading = false;
     }
 
@@ -72,7 +74,19 @@ public partial class TrainersViewModel : ObservableObject
               .ToList();
 
         FilteredTrainers = new ObservableCollection<Trainer>(filtered);
-        FooterText = $"Wyświetlono: {FilteredTrainers.Count} z {_allTrainers.Count} trenerów";
+        FooterText = _localization.Format("Trainers.Footer", FilteredTrainers.Count, _allTrainers.Count);
     }
 
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        ApplyFilter();
+        RefreshStatusText();
+    }
+
+    private void RefreshStatusText()
+    {
+        StatusText = _lastLoadFromCache
+            ? _localization.Format("Trainers.OfflineLoaded", _allTrainers.Count)
+            : _localization.Format("Trainers.Loaded", _allTrainers.Count);
+    }
 }

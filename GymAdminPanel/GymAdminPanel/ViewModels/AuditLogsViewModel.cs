@@ -11,7 +11,9 @@ namespace GymAdminPanel.ViewModels;
 public partial class AuditLogsViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private readonly LocalizationService _localization = LocalizationService.Instance;
     private List<AuditLog> _allLogs = new();
+    private bool _lastLoadFromCache;
 
     [ObservableProperty]
     private ObservableCollection<AuditLog> _filteredLogs = new();
@@ -37,7 +39,7 @@ public partial class AuditLogsViewModel : ObservableObject
         }
     }
 
-    private string _selectedActionFilter = "Wszystkie";
+    private string _selectedActionFilter = LocalizationService.Instance.Translate("Common.All");
     public string SelectedActionFilter
     {
         get => _selectedActionFilter;
@@ -54,6 +56,7 @@ public partial class AuditLogsViewModel : ObservableObject
     public AuditLogsViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        _localization.LanguageChanged += OnLanguageChanged;
         _ = LoadLogsAsync();
     }
 
@@ -61,29 +64,19 @@ public partial class AuditLogsViewModel : ObservableObject
     private async Task LoadLogsAsync()
     {
         IsLoading = true;
-        StatusText = "Pobieranie logów audytowych...";
+        StatusText = _localization.Translate("Audit.Fetching");
 
         _allLogs = await _apiService.GetAuditLogsAsync();
+        _lastLoadFromCache = _apiService.LastResultFromCache;
 
         _allLogs = _allLogs.OrderByDescending(l => l.Timestamp).ToList();
 
-        var actions = _allLogs
-            .Select(l => l.Action)
-            .Distinct()
-            .OrderBy(a => a)
-            .ToList();
+        RefreshActionFilters();
 
-        ActionFilters = new ObservableCollection<string>(
-            new[] { "Wszystkie" }.Concat(actions));
-
-        SelectedActionFilter = "Wszystkie";
+        SelectedActionFilter = _localization.Translate("Common.All");
         ApplyFilter();
 
-        StatusText = _allLogs.Count > 0
-            ? _apiService.LastResultFromCache
-                ? $"Tryb offline: załadowano {_allLogs.Count} wpisów z lokalnej kopii"
-                : $"Załadowano {_allLogs.Count} wpisów"
-            : "Brak danych";
+        RefreshStatusText();
 
         IsLoading = false;
     }
@@ -97,15 +90,68 @@ public partial class AuditLogsViewModel : ObservableObject
             filtered = filtered.Where(l =>
                 (l.ChangedBy?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 (l.Details?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (l.Action?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false));
+                (l.Action?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                l.ActionDisplay.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                l.DetailsDisplay.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (SelectedActionFilter != "Wszystkie")
+        if (SelectedActionFilter != _localization.Translate("Common.All"))
         {
-            filtered = filtered.Where(l => l.Action == SelectedActionFilter);
+            filtered = filtered.Where(l =>
+                l.Action == SelectedActionFilter ||
+                l.ActionDisplay == SelectedActionFilter);
         }
 
         FilteredLogs = new ObservableCollection<AuditLog>(filtered);
-        FooterText = $"Wyświetlono: {FilteredLogs.Count} z {_allLogs.Count} wpisów";
+        FooterText = _localization.Format("Audit.Footer", FilteredLogs.Count, _allLogs.Count);
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        var selectedRawAction = ResolveSelectedRawAction();
+        RefreshActionFilters();
+
+        if (string.IsNullOrWhiteSpace(selectedRawAction))
+            SelectedActionFilter = _localization.Translate("Common.All");
+        else
+            SelectedActionFilter = _localization.TranslateAuditAction(selectedRawAction);
+
+        ApplyFilter();
+        RefreshStatusText();
+    }
+
+    private void RefreshActionFilters()
+    {
+        var actionLabels = _allLogs
+            .Select(log => log.ActionDisplay)
+            .Distinct()
+            .OrderBy(action => action)
+            .ToList();
+
+        ActionFilters = new ObservableCollection<string>(
+            new[] { _localization.Translate("Common.All") }.Concat(actionLabels));
+    }
+
+    private string? ResolveSelectedRawAction()
+    {
+        if (SelectedActionFilter == "Wszystkie" || SelectedActionFilter == "All")
+            return null;
+
+        return _allLogs
+            .Select(log => log.Action)
+            .FirstOrDefault(action =>
+                action == SelectedActionFilter ||
+                _localization.TranslateAuditAction(action) == SelectedActionFilter ||
+                _localization.TranslateAuditActionForLanguage(action, "pl") == SelectedActionFilter ||
+                _localization.TranslateAuditActionForLanguage(action, "en") == SelectedActionFilter);
+    }
+
+    private void RefreshStatusText()
+    {
+        StatusText = _allLogs.Count > 0
+            ? _lastLoadFromCache
+                ? _localization.Format("Audit.OfflineLoaded", _allLogs.Count)
+                : _localization.Format("Audit.Loaded", _allLogs.Count)
+            : _localization.Translate("Audit.NoData");
     }
 }

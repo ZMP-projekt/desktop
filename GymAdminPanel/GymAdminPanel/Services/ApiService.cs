@@ -15,6 +15,7 @@ public class LoginResponse
 
 public class ApiService
 {
+    private static LocalizationService Localization => LocalizationService.Instance;
     private readonly HttpClient _httpClient;
     private readonly OfflineCacheService _cacheService;
     public string Token { get; private set; } = string.Empty;
@@ -65,14 +66,14 @@ public class ApiService
                     if (currentUser == null)
                     {
                         Logout();
-                        LastLoginError = "Nie udało się zweryfikować roli użytkownika.";
+                        LastLoginError = Localization.Translate("Login.RoleVerificationFailed");
                         return false;
                     }
 
                     if (!string.Equals(currentUser.Role, "ROLE_ADMIN", StringComparison.Ordinal))
                     {
                         Logout();
-                        LastLoginError = "Brak dostępu. Panel administracyjny jest dostępny tylko dla administratorów.";
+                        LastLoginError = Localization.Translate("Login.AdminOnlyError");
                         return false;
                     }
 
@@ -85,31 +86,31 @@ public class ApiService
         catch (HttpRequestException)
         {
             Logout();
-            LastLoginError = "Nie można połączyć się z serwerem. Sprawdź internet i spróbuj ponownie.";
+            LastLoginError = Localization.Translate("Login.ConnectionError");
             return false;
         }
         catch (TaskCanceledException)
         {
             Logout();
-            LastLoginError = "Serwer nie odpowiedział na czas. Spróbuj ponownie za chwilę.";
+            LastLoginError = Localization.Translate("Login.Timeout");
             return false;
         }
         catch (Exception)
         {
             Logout();
-            LastLoginError = "Wystąpił błąd logowania. Spróbuj ponownie za chwilę.";
+            LastLoginError = Localization.Translate("Login.GenericError");
             return false;
         }
     }
 
     private static string GetLoginErrorMessage(HttpStatusCode statusCode) => statusCode switch
     {
-        HttpStatusCode.Unauthorized => "Nieprawidłowy e-mail lub hasło.",
-        HttpStatusCode.Forbidden => "Nieprawidłowy e-mail lub hasło.",
-        HttpStatusCode.BadRequest => "Sprawdź poprawność wpisanych danych.",
-        HttpStatusCode.TooManyRequests => "Za dużo prób logowania. Spróbuj ponownie za chwilę.",
-        >= HttpStatusCode.InternalServerError => "Serwer logowania ma chwilowy problem. Spróbuj ponownie później.",
-        _ => "Nie udało się zalogować. Sprawdź dane i spróbuj ponownie."
+        HttpStatusCode.Unauthorized => Localization.Translate("Login.InvalidCredentials"),
+        HttpStatusCode.Forbidden => Localization.Translate("Login.InvalidCredentials"),
+        HttpStatusCode.BadRequest => Localization.Translate("Login.BadRequest"),
+        HttpStatusCode.TooManyRequests => Localization.Translate("Login.TooManyRequests"),
+        >= HttpStatusCode.InternalServerError => Localization.Translate("Login.ServerProblem"),
+        _ => Localization.Translate("Login.Failed")
     };
 
     private async Task<User?> GetCurrentUserAsync()

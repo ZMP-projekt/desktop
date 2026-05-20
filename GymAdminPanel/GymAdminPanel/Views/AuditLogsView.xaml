@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:services="clr-namespace:GymAdminPanel.Services"
              Background="#0E131F"
              FontFamily="Segoe UI">
 
@@ -186,7 +187,7 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel>
-                <TextBlock Text="Logi Audytowe"
+                <TextBlock Text="{Binding [Audit.Title], Source={x:Static services:LocalizationService.Instance}}"
                            FontSize="34"
                            FontWeight="Bold"
                            Foreground="#F4F7FF"/>
@@ -206,7 +207,7 @@
                     Padding="14,0"
                     VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Filtruj:"
+                    <TextBlock Text="{Binding [Common.Filter], Source={x:Static services:LocalizationService.Instance}}"
                                Foreground="#A8AFBF"
                                FontSize="13"
                                FontWeight="SemiBold"
@@ -257,7 +258,7 @@
                                     <ControlTemplate TargetType="TextBox">
                                         <Grid>
                                             <ScrollViewer x:Name="PART_ContentHost"/>
-                                            <TextBlock Text="Szukaj po osobie, akcji lub szczegółach..."
+                                            <TextBlock Text="{Binding [Audit.SearchPlaceholder], Source={x:Static services:LocalizationService.Instance}}"
                                                        Foreground="#687185"
                                                        FontSize="17"
                                                        VerticalAlignment="Center"
@@ -386,23 +387,23 @@
                     </DataGrid.CellStyle>
 
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="DATA I GODZINA"
+                        <DataGridTextColumn Header="{Binding [Audit.DateHeader], Source={x:Static services:LocalizationService.Instance}}"
                                             Binding="{Binding TimestampDisplay}"
                                             Width="210"
                                             SortMemberPath="Timestamp"/>
 
-                        <DataGridTextColumn Header="WYKONAŁ"
+                        <DataGridTextColumn Header="{Binding [Audit.ChangedByHeader], Source={x:Static services:LocalizationService.Instance}}"
                                             Binding="{Binding ChangedBy}"
                                             Width="240"/>
 
-                        <DataGridTemplateColumn Header="AKCJA" Width="240" SortMemberPath="Action">
+                        <DataGridTemplateColumn Header="{Binding [Audit.ActionHeader], Source={x:Static services:LocalizationService.Instance}}" Width="240" SortMemberPath="Action">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="12"
                                             Padding="11,4"
                                             HorizontalAlignment="Left"
                                             Background="{Binding Action, Converter={StaticResource ActionToColorConverter}}">
-                                        <TextBlock Text="{Binding Action}"
+                                        <TextBlock Text="{Binding ActionDisplay}"
                                                    Foreground="White"
                                                    FontWeight="Bold"
                                                    FontSize="11"/>
@@ -411,8 +412,8 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTextColumn Header="SZCZEGÓŁY"
-                                            Binding="{Binding Details}"
+                        <DataGridTextColumn Header="{Binding [Audit.DetailsHeader], Source={x:Static services:LocalizationService.Instance}}"
+                                            Binding="{Binding DetailsDisplay}"
                                             Width="*">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
@@ -453,7 +454,7 @@
                                                         Height="20"
                                                         Foreground="#DDE7FF"
                                                         Margin="0,0,10,0"/>
-                            <TextBlock Text="Ładowanie logów..."
+                            <TextBlock Text="{Binding [Audit.Loading], Source={x:Static services:LocalizationService.Instance}}"
                                        Foreground="#DDE7FF"
                                        FontSize="15"
                                        FontWeight="SemiBold"/>

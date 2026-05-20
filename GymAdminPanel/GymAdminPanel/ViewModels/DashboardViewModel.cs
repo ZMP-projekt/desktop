@@ -12,12 +12,15 @@ namespace GymAdminPanel.ViewModels;
 public partial class DashboardViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private readonly LocalizationService _localization = LocalizationService.Instance;
+    private bool _lastLoadUsedCache;
+    private DateTime _lastUpdatedAt = DateTime.Now;
 
     [ObservableProperty]
     private bool _isLoading;
 
     [ObservableProperty]
-    private string _statusText = "Pobieranie podsumowania...";
+    private string _statusText = LocalizationService.Instance.Translate("Dashboard.FetchingSummary");
 
     [ObservableProperty]
     private int _usersCount;
@@ -41,6 +44,7 @@ public partial class DashboardViewModel : ObservableObject
     public DashboardViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        _localization.LanguageChanged += OnLanguageChanged;
         _ = LoadDashboardAsync();
     }
 
@@ -48,7 +52,7 @@ public partial class DashboardViewModel : ObservableObject
     private async Task LoadDashboardAsync()
     {
         IsLoading = true;
-        StatusText = "Pobieranie najważniejszych danych...";
+        StatusText = _localization.Translate("Dashboard.FetchingKeyData");
 
         var users = await _apiService.GetUsersAsync();
         var usersFromCache = _apiService.LastResultFromCache;
@@ -69,11 +73,24 @@ public partial class DashboardViewModel : ObservableObject
         RecentAuditLogs = new ObservableCollection<AuditLog>(
             auditLogs.OrderByDescending(l => l.Timestamp).Take(5));
 
-        StatusText = usersFromCache || classesFromCache || auditLogsFromCache
-            ? "Tryb offline: część danych pochodzi z lokalnej kopii"
-            : $"Podsumowanie zaktualizowane: {DateTime.Now:HH:mm}";
+        _lastLoadUsedCache = usersFromCache || classesFromCache || auditLogsFromCache;
+        _lastUpdatedAt = DateTime.Now;
+        RefreshStatusText();
 
         IsLoading = false;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        RefreshStatusText();
+        OnPropertyChanged(nameof(RecentAuditLogs));
+    }
+
+    private void RefreshStatusText()
+    {
+        StatusText = _lastLoadUsedCache
+            ? _localization.Translate("Dashboard.OfflineSummary")
+            : _localization.Format("Dashboard.UpdatedAt", _lastUpdatedAt);
     }
 
     partial void OnTodayClassesChanged(ObservableCollection<GymClass> value)

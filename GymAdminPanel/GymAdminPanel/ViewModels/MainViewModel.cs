@@ -11,6 +11,7 @@ namespace GymAdminPanel.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private readonly LocalizationService _localization = LocalizationService.Instance;
     private CancellationTokenSource? _statusAutoDismissCts;
     private bool _isHandlingSessionExpired;
 
@@ -21,7 +22,7 @@ public partial class MainViewModel : ObservableObject
     private string _activeSection = "users";
 
     [ObservableProperty]
-    private string _title = "Panel Administratora Siłowni";
+    private string _title = LocalizationService.Instance.Translate("App.Title");
 
     [ObservableProperty]
     private string _currentSectionTitle = "Dashboard";
@@ -49,11 +50,11 @@ public partial class MainViewModel : ObservableObject
         get
         {
             if (!IsOffline)
-                return "Online";
+                return _localization.Translate("Common.Online");
 
             return LastCacheUpdatedAt.HasValue
-                ? $"Offline · dane z {LastCacheUpdatedAt.Value.ToLocalTime():dd.MM HH:mm}"
-                : "Offline";
+                ? _localization.Format("Common.OfflineDataFrom", LastCacheUpdatedAt.Value.ToLocalTime())
+                : _localization.Translate("Common.Offline");
         }
     }
 
@@ -76,6 +77,7 @@ public partial class MainViewModel : ObservableObject
         _apiService.OfflineModeChanged += OnOfflineModeChanged;
         _apiService.CacheTimestampChanged += OnCacheTimestampChanged;
         _apiService.SessionExpired += OnSessionExpired;
+        _localization.LanguageChanged += OnLanguageChanged;
         IsOffline = _apiService.IsOffline;
         LastCacheUpdatedAt = _apiService.LastCacheUpdatedAt;
 
@@ -103,6 +105,21 @@ public partial class MainViewModel : ObservableObject
     private void OnCacheTimestampChanged(DateTime? cachedAt)
     {
         Application.Current.Dispatcher.Invoke(() => LastCacheUpdatedAt = cachedAt);
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        Title = _localization.Translate("App.Title");
+        OnPropertyChanged(nameof(ConnectionStatusText));
+        CurrentSectionTitle = ActiveSection switch
+        {
+            "dashboard" => _localization.Translate("Nav.Dashboard"),
+            "users" => _localization.Translate("Nav.Users"),
+            "schedule" => _localization.Translate("Nav.Schedule"),
+            "trainers" => _localization.Translate("Nav.Trainers"),
+            "auditlogs" => _localization.Translate("Nav.AuditLogs"),
+            _ => CurrentSectionTitle
+        };
     }
 
     private void OnSessionExpired(string message)
@@ -192,10 +209,16 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void SwitchLanguage(string language)
+    {
+        _localization.SetLanguage(language);
+    }
+
+    [RelayCommand]
     private void ShowDashboard()
     {
         ActiveSection = "dashboard";
-        CurrentSectionTitle = "Dashboard";
+        CurrentSectionTitle = _localization.Translate("Nav.Dashboard");
         var view = new GymAdminPanel.Views.DashboardView();
         view.DataContext = _dashboardViewModel;
         CurrentView = view;
@@ -205,7 +228,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowUsers()
     {
         ActiveSection = "users";
-        CurrentSectionTitle = "Użytkownicy";
+        CurrentSectionTitle = _localization.Translate("Nav.Users");
         var view = new GymAdminPanel.Views.UsersView();
         view.DataContext = _usersViewModel;
         CurrentView = view;
@@ -215,7 +238,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowSchedule()
     {
         ActiveSection = "schedule";
-        CurrentSectionTitle = "Harmonogram";
+        CurrentSectionTitle = _localization.Translate("Nav.Schedule");
         var view = new GymAdminPanel.Views.ScheduleView();
         view.DataContext = _scheduleViewModel;
         CurrentView = view;
@@ -225,7 +248,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowTrainers()
     {
         ActiveSection = "trainers";
-        CurrentSectionTitle = "Trenerzy";
+        CurrentSectionTitle = _localization.Translate("Nav.Trainers");
         var view = new GymAdminPanel.Views.TrainersView();
         view.DataContext = _trainersViewModel;
         CurrentView = view;
@@ -236,7 +259,7 @@ public partial class MainViewModel : ObservableObject
     private void ShowAuditLogs()
     {
         ActiveSection = "auditlogs";
-        CurrentSectionTitle = "Logi audytowe";
+        CurrentSectionTitle = _localization.Translate("Nav.AuditLogs");
         var view = new GymAdminPanel.Views.AuditLogsView();
         view.DataContext = _auditLogsViewModel;
         CurrentView = view;

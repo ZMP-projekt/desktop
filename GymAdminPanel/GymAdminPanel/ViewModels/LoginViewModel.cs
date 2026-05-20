@@ -12,6 +12,7 @@ namespace GymAdminPanel.ViewModels;
 public partial class LoginViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private readonly LocalizationService _localization = LocalizationService.Instance;
 
     [ObservableProperty]
     private string _email = string.Empty;
@@ -30,7 +31,9 @@ public partial class LoginViewModel : ObservableObject
         !string.IsNullOrWhiteSpace(Email) &&
         !string.IsNullOrWhiteSpace(Password);
 
-    public string LoginButtonText => IsLoggingIn ? "Logowanie..." : "Zaloguj się";
+    public string LoginButtonText => IsLoggingIn
+        ? _localization.Translate("Login.SigningIn")
+        : _localization.Translate("Login.SignIn");
 
     public LoginViewModel()
         : this(new ApiService())
@@ -40,6 +43,13 @@ public partial class LoginViewModel : ObservableObject
     public LoginViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        _localization.LanguageChanged += OnLanguageChanged;
+    }
+
+    [RelayCommand]
+    private void SwitchLanguage(string language)
+    {
+        _localization.SetLanguage(language);
     }
 
     [RelayCommand]
@@ -52,19 +62,19 @@ public partial class LoginViewModel : ObservableObject
 
         if (string.IsNullOrWhiteSpace(Email))
         {
-            ErrorMessage = "Podaj adres e-mail.";
+            ErrorMessage = _localization.Translate("Login.EmailRequired");
             return;
         }
 
         if (!IsValidEmail(Email))
         {
-            ErrorMessage = "Podaj poprawny adres e-mail.";
+            ErrorMessage = _localization.Translate("Login.EmailInvalid");
             return;
         }
 
         if (string.IsNullOrWhiteSpace(Password))
         {
-            ErrorMessage = "Podaj hasło.";
+            ErrorMessage = _localization.Translate("Login.PasswordRequired");
             return;
         }
 
@@ -84,13 +94,13 @@ public partial class LoginViewModel : ObservableObject
             else
             {
                 ErrorMessage = string.IsNullOrWhiteSpace(_apiService.LastLoginError)
-                    ? "Nie udało się zalogować. Sprawdź dane i spróbuj ponownie."
+                    ? _localization.Translate("Login.Failed")
                     : _apiService.LastLoginError;
             }
         }
         catch (Exception)
         {
-            ErrorMessage = "Wystąpił nieoczekiwany błąd logowania. Spróbuj ponownie za chwilę.";
+            ErrorMessage = _localization.Translate("Login.UnexpectedError");
         }
         finally
         {
@@ -116,16 +126,15 @@ public partial class LoginViewModel : ObservableObject
         OnPropertyChanged(nameof(LoginButtonText));
     }
 
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        OnPropertyChanged(nameof(LoginButtonText));
+    }
+
     private static bool IsValidEmail(string email)
     {
-        try
-        {
-            var address = new MailAddress(email.Trim());
-            return string.Equals(address.Address, email.Trim(), StringComparison.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return false;
-        }
+        var trimmedEmail = email.Trim();
+        return MailAddress.TryCreate(trimmedEmail, out var address) &&
+               string.Equals(address.Address, trimmedEmail, StringComparison.OrdinalIgnoreCase);
     }
 }

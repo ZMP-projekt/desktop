@@ -27,7 +27,7 @@ public class AuditLogsViewModelTests
         Assert.Equal(3, viewModel.FilteredLogs.Count);
 
         Assert.Equal(["CREATE", "DELETE", "UPDATE"], viewModel.FilteredLogs.Select(l => l.Action));
-        Assert.Equal(["Wszystkie", "CREATE", "DELETE", "UPDATE"], viewModel.ActionFilters);
+        Assert.Equal(["Wszystkie", "AKTUALIZACJA", "USUNIĘCIE", "UTWORZENIE"], viewModel.ActionFilters);
         Assert.Equal("Wyświetlono: 3 z 3 wpisów", viewModel.FooterText);
     }
 
@@ -47,7 +47,7 @@ public class AuditLogsViewModelTests
         await WaitForAsync(() => !viewModel.IsLoading);
         Assert.Equal(3, viewModel.FilteredLogs.Count);
 
-        viewModel.SelectedActionFilter = "CREATE";
+        viewModel.SelectedActionFilter = "UTWORZENIE";
         var createLog = Assert.Single(viewModel.FilteredLogs);
         Assert.Equal("Created yoga class", createLog.Details);
 

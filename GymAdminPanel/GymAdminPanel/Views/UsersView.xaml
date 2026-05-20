@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:services="clr-namespace:GymAdminPanel.Services"
              Background="#0E131F"
              FontFamily="Segoe UI">
 
@@ -89,7 +90,7 @@
 
             <Grid Grid.Row="0" Margin="0,0,0,26">
                 <StackPanel>
-                    <TextBlock Text="Zarządzanie Użytkownikami"
+                    <TextBlock Text="{Binding [Users.Title], Source={x:Static services:LocalizationService.Instance}}"
                                FontSize="34"
                                FontWeight="Bold"
                                Foreground="#F4F7FF"/>
@@ -137,7 +138,7 @@
                                             <ControlTemplate TargetType="TextBox">
                                                 <Grid>
                                                     <ScrollViewer x:Name="PART_ContentHost"/>
-                                                    <TextBlock Text="Filtruj po imieniu, nazwisku, emailu lub roli..."
+                                                    <TextBlock Text="{Binding [Users.SearchPlaceholder], Source={x:Static services:LocalizationService.Instance}}"
                                                                Foreground="#687185"
                                                                FontSize="17"
                                                                VerticalAlignment="Center"
@@ -273,7 +274,7 @@
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="70"/>
 
-                            <DataGridTextColumn Header="IMIĘ I NAZWISKO" Binding="{Binding DisplayName}" Width="1.25*">
+                            <DataGridTextColumn Header="{Binding [Users.NameHeader], Source={x:Static services:LocalizationService.Instance}}" Binding="{Binding DisplayName}" Width="1.25*">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -285,7 +286,7 @@
 
                             <DataGridTextColumn Header="E-MAIL" Binding="{Binding Email}" Width="2*"/>
 
-                            <DataGridTemplateColumn Header="ROLA" Width="220">
+                            <DataGridTemplateColumn Header="{Binding [Users.RoleHeader], Source={x:Static services:LocalizationService.Instance}}" Width="220">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border CornerRadius="12"
@@ -302,7 +303,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="AKCJE" Width="170">
+                            <DataGridTemplateColumn Header="{Binding [Users.ActionsHeader], Source={x:Static services:LocalizationService.Instance}}" Width="170">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal"
@@ -316,7 +317,7 @@
                                                     Style="{StaticResource ActionButtonStyle}"
                                                     Margin="0,0,8,0"
                                                     BorderBrush="#6B4B22"
-                                                    ToolTip="Zmień rolę">
+                                                    ToolTip="{Binding [Users.ChangeRoleTooltip], Source={x:Static services:LocalizationService.Instance}}">
                                                 <iconPacks:PackIconMaterial Kind="AccountCog"
                                                                             Width="19"
                                                                             Height="19"
@@ -330,7 +331,7 @@
                                                         Converter={StaticResource InverseBoolConverter}}"
                                                     Style="{StaticResource ActionButtonStyle}"
                                                     BorderBrush="#653243"
-                                                    ToolTip="Usuń użytkownika">
+                                                    ToolTip="{Binding [Users.DeleteTooltip], Source={x:Static services:LocalizationService.Instance}}">
                                                 <iconPacks:PackIconMaterial Kind="TrashCanOutline"
                                                                             Width="19"
                                                                             Height="19"
@@ -372,7 +373,7 @@
                                                             Height="20"
                                                             Foreground="#DDE7FF"
                                                             Margin="0,0,10,0"/>
-                                <TextBlock Text="Ładowanie użytkowników..."
+                                <TextBlock Text="{Binding [Users.Loading], Source={x:Static services:LocalizationService.Instance}}"
                                            Foreground="#DDE7FF"
                                            FontSize="15"
                                            FontWeight="SemiBold"/>

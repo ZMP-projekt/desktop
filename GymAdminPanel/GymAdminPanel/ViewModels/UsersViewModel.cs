@@ -13,7 +13,9 @@ namespace GymAdminPanel.ViewModels;
 public partial class UsersViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private readonly LocalizationService _localization = LocalizationService.Instance;
     private List<User> _allUsers = new();
+    private bool _lastLoadFromCache;
 
     [ObservableProperty]
     private ObservableCollection<User> _filteredUsers = new();
@@ -25,7 +27,7 @@ public partial class UsersViewModel : ObservableObject
     private bool _isLoading;
 
     [ObservableProperty]
-    private string _statusText = "Pobieranie danych...";
+    private string _statusText = LocalizationService.Instance.Translate("Users.Fetching");
 
     [ObservableProperty]
     private string _footerText = "";
@@ -47,6 +49,7 @@ public partial class UsersViewModel : ObservableObject
     public UsersViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        _localization.LanguageChanged += OnLanguageChanged;
         _ = LoadUsersAsync();
     }
 
@@ -59,17 +62,14 @@ public partial class UsersViewModel : ObservableObject
     private async Task LoadUsersAsync()
     {
         IsLoading = true;
-        StatusText = "Pobieranie użytkowników z serwera...";
+        StatusText = _localization.Translate("Users.FetchingFromServer");
 
         var users = await _apiService.GetUsersAsync();
         _allUsers = users;
+        _lastLoadFromCache = _apiService.LastResultFromCache;
         ApplyFilter();
 
-        StatusText = _allUsers.Count > 0
-            ? _apiService.LastResultFromCache
-                ? $"Tryb offline: załadowano {_allUsers.Count} użytkowników z lokalnej kopii"
-                : $"Załadowano {_allUsers.Count} użytkowników"
-            : "Brak danych lub błąd połączenia";
+        RefreshStatusText();
 
         IsLoading = false;
     }
@@ -92,7 +92,7 @@ public partial class UsersViewModel : ObservableObject
         if (selectedUserId.HasValue)
             SelectedUser = FilteredUsers.FirstOrDefault(u => u.Id == selectedUserId.Value);
 
-        FooterText = $"Wyświetlono: {FilteredUsers.Count} z {_allUsers.Count} użytkowników";
+        FooterText = _localization.Format("Users.Footer", FilteredUsers.Count, _allUsers.Count);
     }
 
     [RelayCommand]
@@ -101,8 +101,8 @@ public partial class UsersViewModel : ObservableObject
         if (user == null) return;
 
         var result = ConfirmDialog.Show(
-            "Potwierdzenie usunięcia",
-            "Czy na pewno chcesz usunąć użytkownika?",
+            _localization.Translate("Users.DeleteTitle"),
+            _localization.Translate("Users.DeleteMessage"),
             $"Email: {user.Email}\nID: {user.Id}",
             ConfirmDialogKind.Warning);
 
@@ -115,12 +115,12 @@ public partial class UsersViewModel : ObservableObject
         {
             _allUsers.Remove(user);
             ApplyFilter();
-            StatusText = $"Użytkownik {user.Email} został usunięty.";
+            StatusText = _localization.Format("Users.Deleted", user.Email);
             _apiService.PublishStatus(AppStatusKind.Success, StatusText);
         }
         else
         {
-            StatusText = "Nie udało się usunąć użytkownika.";
+            StatusText = _localization.Translate("Users.DeleteFailed");
             _apiService.PublishStatus(AppStatusKind.Error, StatusText, true);
         }
 
@@ -136,8 +136,8 @@ public partial class UsersViewModel : ObservableObject
         var newRole = GetNextRole(currentRole);
 
         var result = ConfirmDialog.Show(
-            "Zmiana roli",
-            "Zmienić rolę użytkownika?",
+            _localization.Translate("Users.RoleChangeTitle"),
+            _localization.Translate("Users.RoleChangeMessage"),
             $"Email: {user.Email}\n{currentRole} → {newRole}",
             ConfirmDialogKind.Question);
 
@@ -150,12 +150,12 @@ public partial class UsersViewModel : ObservableObject
         {
             user.Role = newRole;
             ApplyFilter();
-            StatusText = $"Rola użytkownika {user.Email} została zmieniona na {newRole}.";
+            StatusText = _localization.Format("Users.RoleChanged", user.Email, newRole);
             _apiService.PublishStatus(AppStatusKind.Success, StatusText);
         }
         else
         {
-            StatusText = "Nie udało się zmienić roli użytkownika.";
+            StatusText = _localization.Translate("Users.RoleChangeFailed");
         }
 
         IsLoading = false;
@@ -169,6 +169,21 @@ public partial class UsersViewModel : ObservableObject
             "ROLE_ADMIN" => "ROLE_USER",
             _ => "ROLE_USER"
         };
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        ApplyFilter();
+        RefreshStatusText();
+    }
+
+    private void RefreshStatusText()
+    {
+        StatusText = _allUsers.Count > 0
+            ? _lastLoadFromCache
+                ? _localization.Format("Users.OfflineLoaded", _allUsers.Count)
+                : _localization.Format("Users.Loaded", _allUsers.Count)
+            : _localization.Translate("Users.NoData");
+    }
 
     [RelayCommand]
     private void Logout(Window currentWindow)

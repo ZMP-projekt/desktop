@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using GymAdminPanel.Services;
 
 namespace GymAdminPanel.Models;
 
@@ -48,5 +49,7 @@ public class GymClass
     public string TimeRange => $"{StartTime:HH:mm} – {EndTime:HH:mm}";
     public string ParticipantsDisplay => $"{CurrentParticipants}/{MaxParticipants}";
     public bool IsFull => CurrentParticipants >= MaxParticipants;
-    public string TypeLabel => PersonalTraining ? "Trening osobisty" : "Zajęcia grupowe";
+    public string TypeLabel => PersonalTraining
+        ? LocalizationService.Instance.Translate("Schedule.PersonalTraining")
+        : LocalizationService.Instance.Translate("Schedule.GroupClasses");
 }

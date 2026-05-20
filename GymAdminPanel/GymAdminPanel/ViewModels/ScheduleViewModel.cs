@@ -13,6 +13,7 @@ namespace GymAdminPanel.ViewModels;
 public partial class ScheduleViewModel : ObservableObject
 {
     private readonly ApiService _apiService;
+    private readonly LocalizationService _localization = LocalizationService.Instance;
 
     [ObservableProperty]
     private DateTime _selectedDate = DateTime.Today;
@@ -38,6 +39,8 @@ public partial class ScheduleViewModel : ObservableObject
     [ObservableProperty]
     private bool _isOffline;
 
+    private bool _lastLoadFromCache;
+
     [ObservableProperty]
     private ObservableCollection<ScheduleDayOption> _weekDays = new();
 
@@ -47,19 +50,11 @@ public partial class ScheduleViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<string> _locationFilters = new();
 
-    public ObservableCollection<string> TypeFilters { get; } = new()
-    {
-        "Wszystkie typy",
-        "Zajęcia grupowe",
-        "Trening osobisty"
-    };
+    [ObservableProperty]
+    private ObservableCollection<string> _typeFilters = new();
 
-    public ObservableCollection<string> AvailabilityFilters { get; } = new()
-    {
-        "Wszystkie miejsca",
-        "Wolne miejsca",
-        "Pełne zajęcia"
-    };
+    [ObservableProperty]
+    private ObservableCollection<string> _availabilityFilters = new();
 
     private string _searchText = "";
     public string SearchText
@@ -72,7 +67,7 @@ public partial class ScheduleViewModel : ObservableObject
         }
     }
 
-    private string _selectedTrainerFilter = "Wszyscy trenerzy";
+    private string _selectedTrainerFilter = LocalizationService.Instance.Translate("Schedule.AllTrainers");
     public string SelectedTrainerFilter
     {
         get => _selectedTrainerFilter;
@@ -83,7 +78,7 @@ public partial class ScheduleViewModel : ObservableObject
         }
     }
 
-    private string _selectedLocationFilter = "Wszystkie lokalizacje";
+    private string _selectedLocationFilter = LocalizationService.Instance.Translate("Schedule.AllLocations");
     public string SelectedLocationFilter
     {
         get => _selectedLocationFilter;
@@ -94,7 +89,7 @@ public partial class ScheduleViewModel : ObservableObject
         }
     }
 
-    private string _selectedTypeFilter = "Wszystkie typy";
+    private string _selectedTypeFilter = LocalizationService.Instance.Translate("Schedule.AllTypes");
     public string SelectedTypeFilter
     {
         get => _selectedTypeFilter;
@@ -105,7 +100,7 @@ public partial class ScheduleViewModel : ObservableObject
         }
     }
 
-    private string _selectedAvailabilityFilter = "Wszystkie miejsca";
+    private string _selectedAvailabilityFilter = LocalizationService.Instance.Translate("Schedule.AllSpots");
     public string SelectedAvailabilityFilter
     {
         get => _selectedAvailabilityFilter;
@@ -119,6 +114,8 @@ public partial class ScheduleViewModel : ObservableObject
     public ScheduleViewModel(ApiService apiService)
     {
         _apiService = apiService;
+        _localization.LanguageChanged += OnLanguageChanged;
+        RefreshStaticFilterOptions();
         RefreshWeekDays();
         _ = LoadClassesAsync();
     }
@@ -133,18 +130,15 @@ public partial class ScheduleViewModel : ObservableObject
     private async Task LoadClassesAsync()
     {
         IsLoading = true;
-        StatusText = $"Pobieranie zajęć na {SelectedDate:dd MMMM yyyy}...";
+        StatusText = _localization.Format("Schedule.FetchingForDate", FormatSelectedDate());
 
         var result = await _apiService.GetClassesByDateAsync(SelectedDate);
         Classes = new ObservableCollection<GymClass>(result);
+        _lastLoadFromCache = _apiService.LastResultFromCache;
         RefreshFilterOptions();
         ApplyFilters();
 
-        StatusText = Classes.Count > 0
-            ? _apiService.LastResultFromCache
-                ? $"Tryb offline: zajęcia na {SelectedDate:dd MMMM yyyy} z lokalnej kopii"
-                : $"Zajęcia na {SelectedDate:dd MMMM yyyy}"
-            : $"Brak zajęć na {SelectedDate:dd MMMM yyyy}";
+        RefreshStatusText();
 
         IsLoading = false;
     }
@@ -161,55 +155,152 @@ public partial class ScheduleViewModel : ObservableObject
                 (c.LocationName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false));
         }
 
-        if (SelectedTrainerFilter != "Wszyscy trenerzy")
+        if (SelectedTrainerFilter != _localization.Translate("Schedule.AllTrainers"))
             filtered = filtered.Where(c => c.TrainerName == SelectedTrainerFilter);
 
-        if (SelectedLocationFilter != "Wszystkie lokalizacje")
+        if (SelectedLocationFilter != _localization.Translate("Schedule.AllLocations"))
             filtered = filtered.Where(c => c.LocationName == SelectedLocationFilter);
 
         filtered = SelectedTypeFilter switch
         {
-            "Zajęcia grupowe" => filtered.Where(c => !c.PersonalTraining),
-            "Trening osobisty" => filtered.Where(c => c.PersonalTraining),
+            var type when type == _localization.Translate("Schedule.GroupClasses") => filtered.Where(c => !c.PersonalTraining),
+            var type when type == _localization.Translate("Schedule.PersonalTraining") => filtered.Where(c => c.PersonalTraining),
             _ => filtered
         };
 
         filtered = SelectedAvailabilityFilter switch
         {
-            "Wolne miejsca" => filtered.Where(c => !c.IsFull),
-            "Pełne zajęcia" => filtered.Where(c => c.IsFull),
+            var availability when availability == _localization.Translate("Schedule.AvailableSpots") => filtered.Where(c => !c.IsFull),
+            var availability when availability == _localization.Translate("Schedule.FullClasses") => filtered.Where(c => c.IsFull),
             _ => filtered
         };
 
         var result = filtered.OrderBy(c => c.StartTime).ToList();
         FilteredClasses = new ObservableCollection<GymClass>(result);
 
-        FooterText = $"Wyświetlono: {FilteredClasses.Count} z {Classes.Count} zajęć  ·  " +
-                     $"Zapisanych uczestników: {FilteredClasses.Sum(c => c.CurrentParticipants)}";
+        FooterText = _localization.Format(
+            "Schedule.Footer",
+            FilteredClasses.Count,
+            Classes.Count,
+            FilteredClasses.Sum(c => c.CurrentParticipants));
     }
 
     private void RefreshFilterOptions()
     {
         TrainerFilters = new ObservableCollection<string>(
-            new[] { "Wszyscy trenerzy" }
+            new[] { _localization.Translate("Schedule.AllTrainers") }
                 .Concat(Classes.Select(c => c.TrainerName)
                     .Where(t => !string.IsNullOrWhiteSpace(t))
                     .Distinct()
                     .OrderBy(t => t)));
 
         LocationFilters = new ObservableCollection<string>(
-            new[] { "Wszystkie lokalizacje" }
+            new[] { _localization.Translate("Schedule.AllLocations") }
                 .Concat(Classes.Select(c => c.LocationName)
                     .Where(l => !string.IsNullOrWhiteSpace(l))
                     .Distinct()
                     .OrderBy(l => l)));
 
         if (!TrainerFilters.Contains(SelectedTrainerFilter))
-            SelectedTrainerFilter = "Wszyscy trenerzy";
+            SelectedTrainerFilter = _localization.Translate("Schedule.AllTrainers");
 
         if (!LocationFilters.Contains(SelectedLocationFilter))
-            SelectedLocationFilter = "Wszystkie lokalizacje";
+            SelectedLocationFilter = _localization.Translate("Schedule.AllLocations");
     }
+
+    private void RefreshStaticFilterOptions()
+    {
+        var selectedTypeKey = ResolveSelectedTypeKey();
+        var selectedAvailabilityKey = ResolveSelectedAvailabilityKey();
+
+        TypeFilters = new ObservableCollection<string>
+        {
+            _localization.Translate("Schedule.AllTypes"),
+            _localization.Translate("Schedule.GroupClasses"),
+            _localization.Translate("Schedule.PersonalTraining")
+        };
+
+        AvailabilityFilters = new ObservableCollection<string>
+        {
+            _localization.Translate("Schedule.AllSpots"),
+            _localization.Translate("Schedule.AvailableSpots"),
+            _localization.Translate("Schedule.FullClasses")
+        };
+
+        SelectedTypeFilter = _localization.Translate(selectedTypeKey);
+
+        SelectedAvailabilityFilter = _localization.Translate(selectedAvailabilityKey);
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        var selectedTrainerWasAll = IsAllTrainersFilter(SelectedTrainerFilter);
+        var selectedLocationWasAll = IsAllLocationsFilter(SelectedLocationFilter);
+        var selectedTrainer = SelectedTrainerFilter;
+        var selectedLocation = SelectedLocationFilter;
+
+        RefreshStaticFilterOptions();
+        RefreshWeekDays();
+        RefreshFilterOptions();
+
+        if (selectedTrainerWasAll)
+            SelectedTrainerFilter = _localization.Translate("Schedule.AllTrainers");
+        else if (TrainerFilters.Contains(selectedTrainer))
+            SelectedTrainerFilter = selectedTrainer;
+
+        if (selectedLocationWasAll)
+            SelectedLocationFilter = _localization.Translate("Schedule.AllLocations");
+        else if (LocationFilters.Contains(selectedLocation))
+            SelectedLocationFilter = selectedLocation;
+
+        ApplyFilters();
+        RefreshStatusText();
+    }
+
+    private void RefreshStatusText()
+    {
+        var dateText = FormatSelectedDate();
+        StatusText = Classes.Count > 0
+            ? _lastLoadFromCache
+                ? _localization.Format("Schedule.OfflineForDate", dateText)
+                : _localization.Format("Schedule.ClassesForDate", dateText)
+            : _localization.Format("Schedule.NoClassesForDate", dateText);
+    }
+
+    private string FormatSelectedDate()
+        => SelectedDate.ToString("dd MMMM yyyy", CultureInfo.CurrentCulture);
+
+    private string ResolveSelectedTypeKey()
+    {
+        if (MatchesAnyLanguage(SelectedTypeFilter, "Schedule.GroupClasses"))
+            return "Schedule.GroupClasses";
+
+        if (MatchesAnyLanguage(SelectedTypeFilter, "Schedule.PersonalTraining"))
+            return "Schedule.PersonalTraining";
+
+        return "Schedule.AllTypes";
+    }
+
+    private string ResolveSelectedAvailabilityKey()
+    {
+        if (MatchesAnyLanguage(SelectedAvailabilityFilter, "Schedule.AvailableSpots"))
+            return "Schedule.AvailableSpots";
+
+        if (MatchesAnyLanguage(SelectedAvailabilityFilter, "Schedule.FullClasses"))
+            return "Schedule.FullClasses";
+
+        return "Schedule.AllSpots";
+    }
+
+    private bool IsAllTrainersFilter(string value)
+        => MatchesAnyLanguage(value, "Schedule.AllTrainers");
+
+    private bool IsAllLocationsFilter(string value)
+        => MatchesAnyLanguage(value, "Schedule.AllLocations");
+
+    private bool MatchesAnyLanguage(string value, string key)
+        => value == _localization.TranslateForLanguage(key, "pl") ||
+           value == _localization.TranslateForLanguage(key, "en");
 
     private void RefreshWeekDays()
     {

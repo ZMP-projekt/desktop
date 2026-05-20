@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        xmlns:services="clr-namespace:GymAdminPanel.Services"
         Title="{Binding Title}"
         Height="760"
         Width="1180"
@@ -95,6 +96,38 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="LanguageToggleButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="42"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#DDE7FF"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="16">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#232B3E"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#111827"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -131,7 +164,7 @@
                                    Foreground="#F4F7FF"
                                    FontSize="22"
                                    FontWeight="Bold"/>
-                        <TextBlock Text="PANEL ADMINISTRATORA"
+                        <TextBlock Text="{Binding [App.AdminPanel], Source={x:Static services:LocalizationService.Instance}}"
                                    Foreground="#8E95A8"
                                    FontSize="10"
                                    FontWeight="Bold"/>
@@ -153,7 +186,7 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <iconPacks:PackIconMaterial Kind="ViewDashboard" Style="{StaticResource NavIconStyle}"/>
-                            <TextBlock Text="Dashboard" Style="{StaticResource NavLabelStyle}"/>
+                            <TextBlock Text="{Binding [Nav.Dashboard], Source={x:Static services:LocalizationService.Instance}}" Style="{StaticResource NavLabelStyle}"/>
                         </StackPanel>
                     </Button>
 
@@ -171,7 +204,7 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <iconPacks:PackIconMaterial Kind="AccountGroup" Style="{StaticResource NavIconStyle}"/>
-                            <TextBlock Text="Użytkownicy" Style="{StaticResource NavLabelStyle}"/>
+                            <TextBlock Text="{Binding [Nav.Users], Source={x:Static services:LocalizationService.Instance}}" Style="{StaticResource NavLabelStyle}"/>
                         </StackPanel>
                     </Button>
 
@@ -189,7 +222,7 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <iconPacks:PackIconMaterial Kind="CalendarMonth" Style="{StaticResource NavIconStyle}"/>
-                            <TextBlock Text="Harmonogram" Style="{StaticResource NavLabelStyle}"/>
+                            <TextBlock Text="{Binding [Nav.Schedule], Source={x:Static services:LocalizationService.Instance}}" Style="{StaticResource NavLabelStyle}"/>
                         </StackPanel>
                     </Button>
 
@@ -207,7 +240,7 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <iconPacks:PackIconMaterial Kind="WeightLifter" Style="{StaticResource NavIconStyle}"/>
-                            <TextBlock Text="Trenerzy" Style="{StaticResource NavLabelStyle}"/>
+                            <TextBlock Text="{Binding [Nav.Trainers], Source={x:Static services:LocalizationService.Instance}}" Style="{StaticResource NavLabelStyle}"/>
                         </StackPanel>
                     </Button>
 
@@ -225,7 +258,7 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <iconPacks:PackIconMaterial Kind="ClipboardTextClockOutline" Style="{StaticResource NavIconStyle}"/>
-                            <TextBlock Text="Logi audytowe" Style="{StaticResource NavLabelStyle}"/>
+                            <TextBlock Text="{Binding [Nav.AuditLogs], Source={x:Static services:LocalizationService.Instance}}" Style="{StaticResource NavLabelStyle}"/>
                         </StackPanel>
                     </Button>
 
@@ -246,7 +279,7 @@
                             Foreground="#F3F6FF"
                             FontSize="14"
                             FontWeight="SemiBold"
-                            Content="Wyloguj">
+                            Content="{Binding [Nav.Logout], Source={x:Static services:LocalizationService.Instance}}">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border x:Name="Root"
@@ -288,6 +321,26 @@
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center">
                         <Border Height="36"
+                                Margin="0,0,14,0"
+                                Background="#151B27"
+                                BorderBrush="#343B4D"
+                                BorderThickness="1"
+                                CornerRadius="18"
+                                ToolTip="{Binding [Topbar.LanguageTooltip], Source={x:Static services:LocalizationService.Instance}}">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Content="PL"
+                                        Command="{Binding SwitchLanguageCommand}"
+                                        CommandParameter="pl"
+                                        Style="{StaticResource LanguageToggleButtonStyle}"/>
+                                <Border Width="1" Height="18" Background="#343B4D"/>
+                                <Button Content="EN"
+                                        Command="{Binding SwitchLanguageCommand}"
+                                        CommandParameter="en"
+                                        Style="{StaticResource LanguageToggleButtonStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Height="36"
                                 Padding="14,0"
                                 Margin="0,0,14,0"
                                 Background="#151B27"
@@ -326,7 +379,7 @@
                                                             Height="18"
                                                             Margin="0,0,10,0"
                                                             VerticalAlignment="Center"/>
-                                <TextBlock Text="Odśwież"
+                                <TextBlock Text="{Binding [Topbar.Refresh], Source={x:Static services:LocalizationService.Instance}}"
                                            VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>

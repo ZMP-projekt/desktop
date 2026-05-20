@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:services="clr-namespace:GymAdminPanel.Services"
              Background="#0E131F"
              FontFamily="Segoe UI">
 
@@ -149,7 +150,7 @@
 
         <Grid Grid.Row="0" Margin="0,0,0,26">
             <StackPanel>
-                <TextBlock Text="Trenerzy"
+                <TextBlock Text="{Binding [Trainers.Title], Source={x:Static services:LocalizationService.Instance}}"
                            Foreground="#F4F7FF"
                            FontSize="34"
                            FontWeight="Bold"/>
@@ -193,7 +194,7 @@
                                     <ControlTemplate TargetType="TextBox">
                                         <Grid>
                                             <ScrollViewer x:Name="PART_ContentHost"/>
-                                            <TextBlock Text="Szukaj po imieniu, nazwisku lub specjalizacji..."
+                                            <TextBlock Text="{Binding [Trainers.SearchPlaceholder], Source={x:Static services:LocalizationService.Instance}}"
                                                        Foreground="#687185"
                                                        FontSize="16"
                                                        VerticalAlignment="Center"
@@ -232,7 +233,7 @@
                                 Padding="24,18"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center">
-                            <TextBlock Text="Ładowanie trenerów..."
+                            <TextBlock Text="{Binding [Trainers.Loading], Source={x:Static services:LocalizationService.Instance}}"
                                        Foreground="#DDE7FF"
                                        FontSize="15"
                                        FontWeight="SemiBold"/>
