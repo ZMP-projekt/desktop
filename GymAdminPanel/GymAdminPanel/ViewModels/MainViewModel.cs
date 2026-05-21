@@ -63,20 +63,32 @@ public partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private readonly UsersViewModel _usersViewModel;
-    private readonly DashboardViewModel _dashboardViewModel;
-    private readonly ScheduleViewModel _scheduleViewModel;
-    private readonly AuditLogsViewModel _auditLogsViewModel;
-    private readonly TrainersViewModel _trainersViewModel;
+    private readonly UsersViewModel? _usersViewModel;
+    private readonly DashboardViewModel? _dashboardViewModel;
+    private readonly ScheduleViewModel? _scheduleViewModel;
+    private readonly AuditLogsViewModel? _auditLogsViewModel;
+    private readonly TrainersViewModel? _trainersViewModel;
 
     public MainViewModel(ApiService apiService)
+        : this(apiService, startAuditLogPolling: true, initializeViewModels: true)
+    {
+    }
+
+    internal MainViewModel(
+        ApiService apiService,
+        bool startAuditLogPolling,
+        bool initializeViewModels)
     {
         _apiService = apiService;
-        _dashboardViewModel = new DashboardViewModel(apiService);
-        _usersViewModel = new UsersViewModel(apiService);
-        _scheduleViewModel = new ScheduleViewModel(apiService);
-        _auditLogsViewModel = new AuditLogsViewModel(apiService);
-        _trainersViewModel = new TrainersViewModel(apiService);
+
+        if (initializeViewModels)
+        {
+            _dashboardViewModel = new DashboardViewModel(apiService);
+            _usersViewModel = new UsersViewModel(apiService);
+            _scheduleViewModel = new ScheduleViewModel(apiService);
+            _auditLogsViewModel = new AuditLogsViewModel(apiService);
+            _trainersViewModel = new TrainersViewModel(apiService);
+        }
 
         _apiService.StatusChanged += OnStatusChanged;
         _apiService.OfflineModeChanged += OnOfflineModeChanged;
@@ -86,16 +98,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         IsOffline = _apiService.IsOffline;
         LastCacheUpdatedAt = _apiService.LastCacheUpdatedAt;
 
-        ShowDashboard();
-        _ = StartAuditLogPollingAsync();
+        if (initializeViewModels)
+            ShowDashboard();
+
+        if (startAuditLogPolling)
+            _ = StartAuditLogPollingAsync();
     }
 
     partial void OnIsOfflineChanged(bool value)
     {
         OnPropertyChanged(nameof(ConnectionStatusText));
-        _usersViewModel.IsOffline = value;
-        _scheduleViewModel.IsOffline = value;
-        _trainersViewModel.IsOffline = value;
+        if (_usersViewModel != null)
+            _usersViewModel.IsOffline = value;
+
+        if (_scheduleViewModel != null)
+            _scheduleViewModel.IsOffline = value;
+
+        if (_trainersViewModel != null)
+            _trainersViewModel.IsOffline = value;
     }
 
     partial void OnLastCacheUpdatedAtChanged(DateTime? value)
@@ -105,12 +125,12 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnOfflineModeChanged(bool isOffline)
     {
-        Application.Current.Dispatcher.Invoke(() => IsOffline = isOffline);
+        RunOnUiThread(() => IsOffline = isOffline);
     }
 
     private void OnCacheTimestampChanged(DateTime? cachedAt)
     {
-        Application.Current.Dispatcher.Invoke(() => LastCacheUpdatedAt = cachedAt);
+        RunOnUiThread(() => LastCacheUpdatedAt = cachedAt);
     }
 
     private void OnLanguageChanged(object? sender, EventArgs e)
@@ -130,7 +150,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnSessionExpired(string message)
     {
-        Application.Current.Dispatcher.Invoke(() =>
+        RunOnUiThread(() =>
         {
             if (_isHandlingSessionExpired)
                 return;
@@ -251,10 +271,13 @@ public partial class MainViewModel : ObservableObject, IDisposable
         RunOnUiThread(() =>
         {
             _apiService.PublishStatus(AppStatusKind.Info, message);
-            if (ActiveSection == "auditlogs")
+            if (ActiveSection == "auditlogs" && _auditLogsViewModel != null)
                 _ = _auditLogsViewModel.LoadLogsCommand.ExecuteAsync(null);
         });
     }
+
+    internal Task PollAuditLogsOnceAsync()
+        => PollAuditLogsAsync(CancellationToken.None);
 
     private static string BuildAuditLogKey(AuditLog log)
         => string.Join(
@@ -289,19 +312,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
         switch (ActiveSection)
         {
             case "dashboard":
-                await _dashboardViewModel.LoadDashboardCommand.ExecuteAsync(null);
+                if (_dashboardViewModel != null)
+                    await _dashboardViewModel.LoadDashboardCommand.ExecuteAsync(null);
                 break;
             case "users":
-                await _usersViewModel.RefreshCommand.ExecuteAsync(null);
+                if (_usersViewModel != null)
+                    await _usersViewModel.RefreshCommand.ExecuteAsync(null);
                 break;
             case "schedule":
-                await _scheduleViewModel.LoadClassesCommand.ExecuteAsync(null);
+                if (_scheduleViewModel != null)
+                    await _scheduleViewModel.LoadClassesCommand.ExecuteAsync(null);
                 break;
             case "trainers":
-                await _trainersViewModel.LoadTrainersCommand.ExecuteAsync(null);
+                if (_trainersViewModel != null)
+                    await _trainersViewModel.LoadTrainersCommand.ExecuteAsync(null);
                 break;
             case "auditlogs":
-                await _auditLogsViewModel.LoadLogsCommand.ExecuteAsync(null);
+                if (_auditLogsViewModel != null)
+                    await _auditLogsViewModel.LoadLogsCommand.ExecuteAsync(null);
                 break;
         }
     }
@@ -350,7 +378,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         var view = new GymAdminPanel.Views.TrainersView();
         view.DataContext = _trainersViewModel;
         CurrentView = view;
-        _ = _trainersViewModel.LoadTrainersCommand.ExecuteAsync(null);
+        if (_trainersViewModel != null)
+            _ = _trainersViewModel.LoadTrainersCommand.ExecuteAsync(null);
     }
 
     [RelayCommand]
