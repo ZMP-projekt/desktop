@@ -2,17 +2,22 @@
 using CommunityToolkit.Mvvm.Input;
 using GymAdminPanel.Models;
 using GymAdminPanel.Services;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows;
 
 namespace GymAdminPanel.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel : ObservableObject, IDisposable
 {
+    private static readonly TimeSpan AuditLogPollingInterval = TimeSpan.FromSeconds(15);
     private readonly ApiService _apiService;
     private readonly LocalizationService _localization = LocalizationService.Instance;
     private CancellationTokenSource? _statusAutoDismissCts;
+    private readonly CancellationTokenSource _auditLogPollingCts = new();
+    private readonly HashSet<string> _seenAuditLogKeys = new(StringComparer.Ordinal);
+    private bool _auditLogPollingInitialized;
     private bool _isHandlingSessionExpired;
 
     [ObservableProperty]
@@ -82,6 +87,7 @@ public partial class MainViewModel : ObservableObject
         LastCacheUpdatedAt = _apiService.LastCacheUpdatedAt;
 
         ShowDashboard();
+        _ = StartAuditLogPollingAsync();
     }
 
     partial void OnIsOfflineChanged(bool value)
@@ -130,6 +136,7 @@ public partial class MainViewModel : ObservableObject
                 return;
 
             _isHandlingSessionExpired = true;
+            _auditLogPollingCts.Cancel();
 
             var loginWindow = new GymAdminPanel.Views.LoginWindow();
             loginWindow.Show();
@@ -176,6 +183,97 @@ public partial class MainViewModel : ObservableObject
         catch (TaskCanceledException)
         {
         }
+    }
+
+    private async Task StartAuditLogPollingAsync()
+    {
+        while (!_auditLogPollingCts.Token.IsCancellationRequested)
+        {
+            try
+            {
+                await PollAuditLogsAsync(_auditLogPollingCts.Token);
+                await Task.Delay(AuditLogPollingInterval, _auditLogPollingCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch
+            {
+                try
+                {
+                    await Task.Delay(AuditLogPollingInterval, _auditLogPollingCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    private async Task PollAuditLogsAsync(CancellationToken cancellationToken)
+    {
+        var logs = await _apiService.GetAuditLogsAsync();
+        if (cancellationToken.IsCancellationRequested || _apiService.LastResultFromCache)
+            return;
+
+        var currentKeys = logs
+            .Select(BuildAuditLogKey)
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (!_auditLogPollingInitialized)
+        {
+            _seenAuditLogKeys.Clear();
+            foreach (var key in currentKeys)
+                _seenAuditLogKeys.Add(key);
+
+            _auditLogPollingInitialized = true;
+            return;
+        }
+
+        var newLogs = logs
+            .Where(log => !_seenAuditLogKeys.Contains(BuildAuditLogKey(log)))
+            .OrderByDescending(log => log.Timestamp)
+            .ToList();
+
+        foreach (var key in currentKeys)
+            _seenAuditLogKeys.Add(key);
+
+        if (newLogs.Count == 0)
+            return;
+
+        var newestLog = newLogs.First();
+        var message = newLogs.Count == 1
+            ? _localization.Format("Audit.NotificationSingle", newestLog.ActionDisplay)
+            : _localization.Format("Audit.NotificationMultiple", newLogs.Count, newestLog.ActionDisplay);
+
+        RunOnUiThread(() =>
+        {
+            _apiService.PublishStatus(AppStatusKind.Info, message);
+            if (ActiveSection == "auditlogs")
+                _ = _auditLogsViewModel.LoadLogsCommand.ExecuteAsync(null);
+        });
+    }
+
+    private static string BuildAuditLogKey(AuditLog log)
+        => string.Join(
+            "|",
+            log.Timestamp.ToUniversalTime().Ticks,
+            log.ChangedBy ?? string.Empty,
+            log.Action ?? string.Empty,
+            log.Details ?? string.Empty);
+
+    private static void RunOnUiThread(Action action)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.CheckAccess())
+        {
+            action();
+            return;
+        }
+
+        dispatcher.Invoke(action);
     }
 
     [RelayCommand]
@@ -268,9 +366,24 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Logout(Window currentWindow)
     {
+        _auditLogPollingCts.Cancel();
         _apiService.Logout();
         var loginWindow = new GymAdminPanel.Views.LoginWindow();
         loginWindow.Show();
         currentWindow?.Close();
+    }
+
+    public void Dispose()
+    {
+        _statusAutoDismissCts?.Cancel();
+        _statusAutoDismissCts?.Dispose();
+        _auditLogPollingCts.Cancel();
+        _auditLogPollingCts.Dispose();
+
+        _apiService.StatusChanged -= OnStatusChanged;
+        _apiService.OfflineModeChanged -= OnOfflineModeChanged;
+        _apiService.CacheTimestampChanged -= OnCacheTimestampChanged;
+        _apiService.SessionExpired -= OnSessionExpired;
+        _localization.LanguageChanged -= OnLanguageChanged;
     }
 }
