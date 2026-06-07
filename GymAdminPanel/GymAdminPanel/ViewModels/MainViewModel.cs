@@ -414,5 +414,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         _apiService.CacheTimestampChanged -= OnCacheTimestampChanged;
         _apiService.SessionExpired -= OnSessionExpired;
         _localization.LanguageChanged -= OnLanguageChanged;
+
+        GC.SuppressFinalize(this);
     }
 }

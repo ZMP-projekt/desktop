@@ -306,7 +306,9 @@ public class ApiService
 
         try
         {
-            string dateParam = date.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            string dateParam = date.ToString(
+                "yyyy-MM-ddTHH:mm:ssZ",
+                System.Globalization.CultureInfo.InvariantCulture);
             var response = await _httpClient.GetAsync($"api/classes/by-date?date={Uri.EscapeDataString(dateParam)}");
 
             if (response.IsSuccessStatusCode)

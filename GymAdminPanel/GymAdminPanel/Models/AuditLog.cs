@@ -18,7 +18,9 @@ public class AuditLog
     [JsonPropertyName("timestamp")]
     public DateTime Timestamp { get; set; }
 
-    public string TimestampDisplay => Timestamp.ToLocalTime().ToString("dd.MM.yyyy  HH:mm:ss");
+    public string TimestampDisplay => Timestamp.ToLocalTime().ToString(
+        "dd.MM.yyyy  HH:mm:ss",
+        System.Globalization.CultureInfo.CurrentCulture);
     public string ActionDisplay => LocalizationService.Instance.TranslateAuditAction(Action);
     public string DetailsDisplay => LocalizationService.Instance.TranslateAuditDetails(Details);
 }
